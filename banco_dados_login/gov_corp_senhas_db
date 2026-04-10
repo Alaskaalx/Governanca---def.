@@ -1,0 +1,66 @@
+-- Cria o banco de dados exclusivo para autenticação
+CREATE DATABASE IF NOT EXISTS gov_corp_senhas_db;
+USE gov_corp_senhas_db;
+
+-- 1. Tabela independente para Compliance
+CREATE TABLE login_compliance (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    senha_hash VARCHAR(255) NOT NULL,
+    perfil ENUM('admin', 'usuario') DEFAULT 'usuario',
+    primeiro_acesso BOOLEAN DEFAULT TRUE,
+    ativo BOOLEAN DEFAULT TRUE
+);
+
+-- 2. Tabela independente para Monitoramento
+CREATE TABLE login_monitoramento (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    senha_hash VARCHAR(255) NOT NULL,
+    perfil ENUM('admin', 'usuario') DEFAULT 'usuario',
+    primeiro_acesso BOOLEAN DEFAULT TRUE,
+    ativo BOOLEAN DEFAULT TRUE
+);
+
+-- 3. Tabela independente para Auditoria de Sites
+CREATE TABLE login_auditoria_sites (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    senha_hash VARCHAR(255) NOT NULL,
+    perfil ENUM('admin', 'usuario') DEFAULT 'usuario',
+    primeiro_acesso BOOLEAN DEFAULT TRUE,
+    ativo BOOLEAN DEFAULT TRUE
+);
+
+-- 4. Tabela independente para Auditoria de Processos
+CREATE TABLE login_auditoria_processos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    senha_hash VARCHAR(255) NOT NULL,
+    perfil ENUM('admin', 'usuario') DEFAULT 'usuario',
+    primeiro_acesso BOOLEAN DEFAULT TRUE,
+    ativo BOOLEAN DEFAULT TRUE
+);
+
+-- 5. Tabela independente para Gestão de Medidas
+CREATE TABLE login_gestao_medidas (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    senha_hash VARCHAR(255) NOT NULL,
+    perfil ENUM('admin', 'usuario') DEFAULT 'usuario',
+    primeiro_acesso BOOLEAN DEFAULT TRUE,
+    ativo BOOLEAN DEFAULT TRUE
+);
+
+-- ==========================================
+-- INSERINDO DADOS DE TESTE (Gestão de Medidas)
+-- ==========================================
+-- Senha para ambos é: 123456
+
+-- Inserindo o SEU perfil (Admin)
+INSERT INTO login_gestao_medidas (username, senha_hash, perfil, primeiro_acesso, ativo) 
+VALUES ('admin_master', '$2y$10$wN1Q.P/y9s6T/.B.Y.D.7.qP/M.z.r.X.z.H.z.x.G.Z.H.X.z.M.y', 'admin', 1, 1);
+
+-- Inserindo um usuário comum
+INSERT INTO login_gestao_medidas (username, senha_hash, perfil, primeiro_acesso, ativo) 
+VALUES ('joao_usuario', '$2y$10$wN1Q.P/y9s6T/.B.Y.D.7.qP/M.z.r.X.z.H.z.x.G.Z.H.X.z.M.y', 'usuario', 1, 1);
