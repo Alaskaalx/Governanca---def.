@@ -1,0 +1,102 @@
+<!DOCTYPE HTML>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <title>Login Monitoramento</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    
+    <link rel="stylesheet" href="../assets/css/main.css" />
+    <noscript><link rel="stylesheet" href="../assets/css/noscript.css" /></noscript>
+    
+    <style>
+        #header { margin-top: 2rem; }
+        #main { display: flex !important; align-items: center; justify-content: center; }
+        #main article { 
+            display: block !important; 
+            opacity: 1 !important; 
+            transform: translateY(0) !important; 
+            margin-top: 0 !important;
+        }
+    </style>
+</head>
+<body class="is-preload">
+
+    <div id="wrapper">
+
+        <header id="header">
+            <div class="logo">
+                <span class="icon fa-gem"></span>
+            </div>
+        </header>
+
+        <div id="main">
+
+            <article id="login-form">
+                <h2 class="major" id="titulo-login">Login Monitoramento</h2>
+
+                <form id="form-auth" method="post" action="#">
+                    <div class="fields">
+                        <div class="field">
+                            <label for="username">Usuário:</label>
+                            <input type="text" id="username" name="username" required />
+                        </div>
+                        <div class="field">
+                            <label for="password">Senha:</label>
+                            <input type="password" id="password" name="password" required />
+                        </div>
+                    </div>
+                    
+                    <ul class="actions">
+                        <li><button type="submit" id="btn-login" class="primary">Entrar</button></li>
+                        <li><a href="../index.html#navegar" class="button">Voltar</a></li>
+                    </ul>
+                </form>
+
+            </article>
+
+        </div>
+
+        <footer id="footer">
+            <p class="copyright">&copy; Seu Sistema. Design base: <a href="https://html5up.net">HTML5 UP</a>.</p>
+        </footer>
+
+    </div>
+
+    <div id="bg"></div>
+
+    <script src="../assets/js/jquery.min.js"></script>
+    <script src="../assets/js/browser.min.js"></script>
+    <script src="../assets/js/breakpoints.min.js"></script>
+    <script src="../assets/js/util.js"></script>
+    <script src="../assets/js/main.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const formAuth = document.getElementById('form-auth');
+            const btnLogin = document.getElementById('btn-login');
+
+            if(formAuth) {
+                formAuth.addEventListener('submit', function(event) {
+                    // Impede o formulário de recarregar a página (comportamento padrão)
+                    event.preventDefault();
+
+                    // Muda o texto do botão para dar um feedback visual de carregamento
+                    btnLogin.innerText = "Entrando...";
+                    btnLogin.style.opacity = "0.7";
+
+                    // Aqui você colocaria a lógica real (API, banco de dados, etc)
+                    // Vamos simular um tempinho de carregamento (1 segundo) e redirecionar
+                    setTimeout(function() {
+                        // MUDE AQUI PARA O NOME DA SUA PÁGINA PÓS-LOGIN CORRESPONDENTE
+                        window.location.href = "monitoramento.html"; 
+                    }, 1000);
+                });
+            }
+        });
+    </script>
+
+</body>
+</html>
+
+</body>
+</html>
