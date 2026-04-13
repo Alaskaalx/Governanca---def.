@@ -1,0 +1,147 @@
+
+<!DOCTYPE HTML>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <title>Painel - Gestão de Medidas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <link rel="stylesheet" href="../assets/css/main.css" />
+    <noscript><link rel="stylesheet" href="../assets/css/noscript.css" /></noscript>
+    
+    <style>
+        #header { margin-top: 2rem; }
+        #main { display: flex !important; align-items: center; justify-content: center; padding-bottom: 4rem; }
+        #main article { 
+            display: block !important; 
+            opacity: 1 !important; 
+            transform: translateY(0) !important; 
+            margin-top: 0 !important;
+            width: 60rem; /* Deixei o painel mais largo para comportar o formulário confortavelmente */
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body class="is-preload">
+
+    <div id="wrapper">
+
+        <header id="header">
+            <div class="logo">
+                <span class="icon fa-gem"></span>
+            </div>
+        </header>
+
+        <div id="main">
+
+            <article id="gestao-form">
+                <h2 class="major">Emissão de Medidas Disciplinares</h2>
+                <p>Preencha os campos abaixo para registrar a medida. Os campos com (*) são obrigatórios.</p>
+
+                <form id="form-medidas" method="post" action="#">
+                    <div class="fields">
+                        
+                        <div class="field quarter">
+                            <label for="matricula">Matrícula</label>
+                            <input type="number" id="matricula" name="matricula" />
+                        </div>
+                        <div class="field quarter">
+                            <label for="admissao">Admissão</label>
+                            <input type="date" id="admissao" name="admissao" />
+                        </div>
+                        <div class="field quarter">
+                            <label for="volume_medidas">Vol. Medidas Recebidas</label>
+                            <input type="number" id="volume_medidas" name="volume_medidas" />
+                        </div>
+                        <div class="field quarter">
+                            <label for="grupo">Grupo</label>
+                            <select id="grupo" name="grupo">
+                                <option value="">Selecione...</option>
+                                <option value="1">Carregando do DB...</option>
+                            </select>
+                        </div>
+
+                        <div class="field quarter">
+                            <label for="nome">Nome</label>
+                            <input type="text" id="nome" name="nome" />
+                        </div>
+                        <div class="field quarter">
+                            <label for="nova_gravidade">Nova Gravidade</label>
+                            <input type="text" id="nova_gravidade" name="nova_gravidade" />
+                        </div>
+                        <div class="field quarter">
+                            <label for="gestor_1">1º Gestor</label>
+                            <input type="text" id="gestor_1" name="gestor_1" />
+                        </div>
+                        <div class="field quarter">
+                            <label for="proxima_acao">Próxima Ação</label>
+                            <select id="proxima_acao" name="proxima_acao">
+                                <option value="">Selecione...</option>
+                                <option value="Advertência">Advertência</option>
+                                <option value="Suspensão">Suspensão</option>
+                                <option value="Justa Causa">Justa Causa</option>
+                            </select>
+                        </div>
+
+                        <div class="field third">
+                            <label for="gestor_2">2º Gestor</label>
+                            <input type="text" id="gestor_2" name="gestor_2" />
+                        </div>
+                        <div class="field third">
+                            <label for="gerente">Gerente</label>
+                            <input type="text" id="gerente" name="gerente" />
+                        </div>
+                        <div class="field third">
+                            <label for="diretor">Diretor</label>
+                            <input type="text" id="diretor" name="diretor" />
+                        </div>
+
+                        <div class="field half">
+                            <label for="ato_faltoso">Ato Faltoso</label>
+                            <select id="ato_faltoso" name="ato_faltoso">
+                                <option value="">Selecione...</option>
+                                <option value="1">Carregando do DB...</option>
+                            </select>
+                        </div>
+                        <div class="field half">
+                            <label for="data_ato_faltoso">Data do Ato Faltoso *</label>
+                            <input type="date" id="data_ato_faltoso" name="data_ato_faltoso" required />
+                        </div>
+
+                        <div class="field">
+                            <label for="info_compliance">Informações | Compliance</label>
+                            <textarea id="info_compliance" name="info_compliance" rows="2"></textarea>
+                        </div>
+
+                        <div class="field">
+                            <label for="descricao">Descrição</label>
+                            <textarea id="descricao" name="descricao" rows="3"></textarea>
+                        </div>
+
+                    </div>
+                    
+                    <ul class="actions">
+                        <li><button type="submit" class="primary">Salvar Medida</button></li>
+                        <li><input type="reset" value="Limpar Campos" /></li>
+                    </ul>
+                </form>
+
+            </article>
+
+        </div>
+
+        <footer id="footer">
+            <p class="copyright">&copy; Gestão de Medidas. Usuário logado: <strong><?php echo $_SESSION['usuario_nome']; ?></strong>.</p>
+        </footer>
+
+    </div>
+
+    <div id="bg"></div>
+
+    <script src="../assets/js/jquery.min.js"></script>
+    <script src="../assets/js/browser.min.js"></script>
+    <script src="../assets/js/breakpoints.min.js"></script>
+    <script src="../assets/js/util.js"></script>
+    <script src="../assets/js/main.js"></script>
+
+</body>
+</html>
