@@ -1,25 +1,14 @@
-
 <!DOCTYPE HTML>
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8" />
     <title>Painel - Gestão de Medidas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-    <link rel="stylesheet" href="../assets/css/main.css" />
-    <noscript><link rel="stylesheet" href="../assets/css/noscript.css" /></noscript>
     
-    <style>
-        #header { margin-top: 2rem; }
-        #main { display: flex !important; align-items: center; justify-content: center; padding-bottom: 4rem; }
-        #main article { 
-            display: block !important; 
-            opacity: 1 !important; 
-            transform: translateY(0) !important; 
-            margin-top: 0 !important;
-            width: 60rem; /* Deixei o painel mais largo para comportar o formulário confortavelmente */
-            max-width: 100%;
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/main.css" />
+    <link rel="stylesheet" href="../assets/css/gestao_medidas.css" />
+    <noscript><link rel="stylesheet" href="../assets/css/noscript.css" /></noscript>
+
 </head>
 <body class="is-preload">
 
@@ -37,12 +26,11 @@
                 <h2 class="major">Emissão de Medidas Disciplinares</h2>
                 <p>Preencha os campos abaixo para registrar a medida. Os campos com (*) são obrigatórios.</p>
 
-                <form id="form-medidas" method="post" action="#">
+                <form id="form-medidas">
                     <div class="fields">
-                        
                         <div class="field quarter">
                             <label for="matricula">Matrícula</label>
-                            <input type="number" id="matricula" name="matricula" />
+                            <input type="number" id="matricula" name="matricula" onblur="buscarDadosColaborador()" />
                         </div>
                         <div class="field quarter">
                             <label for="admissao">Admissão</label>
@@ -52,59 +40,62 @@
                             <label for="volume_medidas">Vol. Medidas Recebidas</label>
                             <input type="number" id="volume_medidas" name="volume_medidas" />
                         </div>
+                        
                         <div class="field quarter">
-                            <label for="grupo">Grupo</label>
-                            <select id="grupo" name="grupo">
-                                <option value="">Selecione...</option>
-                                <option value="1">Carregando do DB...</option>
+                            <label for="grupo">Grupo de Infração *</label>
+                            <select id="grupo" name="grupo_id" required onchange="atualizarAtos()">
+                                <option value="">Selecione o Grupo...</option>
+                                <option value="1">NORMAS E CONDUTAS</option>
+                                <option value="2">SEGURANÇA DA INFORMAÇÃO</option>
+                                <option value="3">JORNADA DE TRABALHO</option>
+                                <option value="4">QUALIDADE</option>
                             </select>
                         </div>
-
-                        <div class="field quarter">
-                            <label for="nome">Nome</label>
-                            <input type="text" id="nome" name="nome" />
+                        
+                        <div class="field half">
+                            <label for="ato_faltoso">Ato Faltoso *</label>
+                            <select id="ato_faltoso" name="ato_faltoso_id" required onchange="preencherDadosDoAto()">
+                                <option value="">Selecione um grupo primeiro...</option>
+                            </select>
                         </div>
+                        
+                        <div class="field half">
+                            <label for="data_ato_manual">Data do Ato Faltoso (Apenas para o Texto) *</label>
+                            <input type="date" id="data_ato_manual" required onchange="preencherDadosDoAto()" />
+                        </div>
+                        <div class="field full-width">
+                            <label for="nome">Nome do Colaborador</label>
+                            <input type="text" id="nome" name="nome" oninput="preencherDadosDoAto()" />
+                        </div>
+                        
                         <div class="field quarter">
                             <label for="nova_gravidade">Nova Gravidade</label>
-                            <input type="text" id="nova_gravidade" name="nova_gravidade" />
+                            <input type="text" id="nova_gravidade" name="nova_gravidade" readonly style="background-color: rgba(255,255,255,0.05);" />
                         </div>
+                        
+                        <div class="field quarter">
+                            <label for="proxima_acao">Próxima Ação</label>
+                            <input type="text" id="proxima_acao" name="proxima_acao" readonly style="background-color: rgba(255,255,255,0.05);" />
+                        </div>
+
                         <div class="field quarter">
                             <label for="gestor_1">1º Gestor</label>
                             <input type="text" id="gestor_1" name="gestor_1" />
                         </div>
-                        <div class="field quarter">
-                            <label for="proxima_acao">Próxima Ação</label>
-                            <select id="proxima_acao" name="proxima_acao">
-                                <option value="">Selecione...</option>
-                                <option value="Advertência">Advertência</option>
-                                <option value="Suspensão">Suspensão</option>
-                                <option value="Justa Causa">Justa Causa</option>
-                            </select>
-                        </div>
 
-                        <div class="field third">
+                        <div class="field quarter">
                             <label for="gestor_2">2º Gestor</label>
                             <input type="text" id="gestor_2" name="gestor_2" />
                         </div>
-                        <div class="field third">
+
+                        <div class="field half">
                             <label for="gerente">Gerente</label>
                             <input type="text" id="gerente" name="gerente" />
                         </div>
-                        <div class="field third">
-                            <label for="diretor">Diretor</label>
-                            <input type="text" id="diretor" name="diretor" />
-                        </div>
 
                         <div class="field half">
-                            <label for="ato_faltoso">Ato Faltoso</label>
-                            <select id="ato_faltoso" name="ato_faltoso">
-                                <option value="">Selecione...</option>
-                                <option value="1">Carregando do DB...</option>
-                            </select>
-                        </div>
-                        <div class="field half">
-                            <label for="data_ato_faltoso">Data do Ato Faltoso *</label>
-                            <input type="date" id="data_ato_faltoso" name="data_ato_faltoso" required />
+                            <label for="diretor">Diretor</label>
+                            <input type="text" id="diretor" name="diretor" />
                         </div>
 
                         <div class="field">
@@ -113,24 +104,61 @@
                         </div>
 
                         <div class="field">
-                            <label for="descricao">Descrição</label>
-                            <textarea id="descricao" name="descricao" rows="3"></textarea>
+                            <label for="descricao">Corpo da Medida (Texto Oficial) *</label>
+                            <textarea id="descricao" name="texto_gerado" placeholder="Preencha o Nome, Data e Ato Faltoso para gerar o texto oficial..." required readonly style="background-color: rgba(255,255,255,0.05); cursor: not-allowed;"></textarea>
                         </div>
 
                     </div>
                     
                     <ul class="actions">
-                        <li><button type="submit" class="primary">Salvar Medida</button></li>
-                        <li><input type="reset" value="Limpar Campos" /></li>
+                        <li><button type="button" class="button" onclick="gerarTextoMedida()">Gerar Medida pdf</button></li>
+                        <li><button type="submit" class="primary" id="btn-quebrar">Gerar quebra de fluxo</button></li>
                     </ul>
+                    
+                    <div id="mensagem-retorno"></div>
                 </form>
 
+                <div class="box" style="background-color: rgba(255,255,255,0.05); text-align: center;">
+                    <h4>Importação Massiva de Colaboradores</h4>
+                    <p style="font-size: 0.8rem; margin-bottom: 1rem;">Selecione uma planilha Excel (.xlsx) para atualizar a base de dados.</p>
+                    
+                    <form id="form-upload" enctype="multipart/form-data" style="margin: 0; display: flex; justify-content: center; gap: 10px; align-items: center;">
+                        <input type="file" id="arquivo-excel" name="planilhaExcel" accept=".xlsx, .xls" required style="width: auto; padding: 0.4rem; background: #fff; color: #000; border-radius: 4px;" />
+                        <button type="submit" class="button primary small" id="btn-importar">Importar Dados</button>
+                    </form>
+                    <div id="mensagem-upload" style="margin-top: 10px; font-weight: bold; font-size: 0.9rem;"></div>
+                </div>
+
+                <hr style="margin: 3rem 0;" /> <h3 class="major">Histórico de Medidas Emitidas</h3>
+
+                
+                
+                <div class="table-wrapper historico-container">
+                    <table class="alt" id="tabela-historico">
+                        <thead>
+                            <tr>
+                                <th>Matrícula</th>
+                                <th>Nome</th>
+                                <th>Data do Ato</th>
+                                <th>Validade Medida</th>
+                                <th>Tipo de Medida</th>
+                                <th>Ato Faltoso</th>
+                                <th>Gravidade</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-medidas-body">
+                            <tr>
+                                <td colspan="7" style="text-align: center; color: rgba(255,255,255,0.5);">Nenhuma medida encontrada ou carregando...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </article>
 
         </div>
 
         <footer id="footer">
-            <p class="copyright">&copy; Gestão de Medidas. Usuário logado: <strong><?php echo $_SESSION['usuario_nome']; ?></strong>.</p>
+            <p class="copyright">&copy; Gestão de Medidas. Usuário logado: <strong id="usuario-logado">Carregando...</strong>.</p>
         </footer>
 
     </div>
@@ -143,5 +171,304 @@
     <script src="../assets/js/util.js"></script>
     <script src="../assets/js/main.js"></script>
 
+    <script>
+        // Array global para guardar os dados vindos da base de dados
+        let listaAtosFaltosos = [];
+
+        // ============================================================================
+        // 1. FUNÇÃO: Buscar Colaborador pela Matrícula e Autopreencher
+        // ============================================================================
+        async function buscarDadosColaborador() {
+            const matriculaInput = document.getElementById('matricula');
+            const matricula = matriculaInput.value.trim();
+
+            if (!matricula) return;
+
+            try {
+                const response = await fetch(`/api/medidas/colaborador/${matricula}`);
+                const result = await response.json();
+
+                if (response.ok && result.sucesso) {
+                    const dados = result.dados;
+
+                    // Preenche os campos do formulário
+                    document.getElementById('nome').value = dados.nome || '';
+                    document.getElementById('gestor_1').value = dados.gestor_1 || '';
+                    document.getElementById('gestor_2').value = dados.gestor_2 || '';
+                    document.getElementById('gerente').value = dados.gerente || '';
+                    document.getElementById('diretor').value = dados.diretor || '';
+
+                    // Formata a data de admissão para o input date
+                    const dataAdmissao = dados.data_admissao || dados.admissao;
+                    if (dataAdmissao) {
+                        document.getElementById('admissao').value = dataAdmissao.split('T')[0];
+                    }
+
+                    // Se já tiver ato escolhido, atualiza o texto oficial com o nome
+                    if (typeof preencherDadosDoAto === 'function') {
+                        preencherDadosDoAto();
+                    }
+                    
+                    // Chama a tabela para carregar o histórico dessa matrícula
+                    carregarHistoricoMedidas(matricula);
+
+                } else {
+                    console.log("Matrícula não encontrada.");
+                }
+            } catch (error) {
+                console.error("Erro ao buscar os dados da matrícula:", error);
+            }
+        }
+
+        // Gatilho extra para a tecla Enter no campo de matrícula
+        document.getElementById('matricula').addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') buscarDadosColaborador();
+        });
+
+        // ============================================================================
+        // 2. FUNÇÃO: Muda os Atos Faltosos de acordo com o Grupo
+        // ============================================================================
+        function atualizarAtos() {
+            const grupoId = document.getElementById('grupo').value;
+            const selectAto = document.getElementById('ato_faltoso');
+            
+            selectAto.innerHTML = '<option value="">Selecione o Ato Faltoso...</option>';
+            
+            const atosDoGrupo = listaAtosFaltosos.filter(ato => ato.grupo_id == grupoId);
+            
+            atosDoGrupo.forEach(ato => {
+                let opt = document.createElement('option');
+                opt.value = ato.id;
+                opt.innerHTML = `${ato.item} - ${ato.descricao_ato}`; 
+                selectAto.appendChild(opt);
+            });
+
+            document.getElementById('nova_gravidade').value = '';
+            document.getElementById('proxima_acao').value = '';
+            document.getElementById('descricao').value = '';
+        }
+
+        // ============================================================================
+        // 3. FUNÇÃO MÁGICA: Faz a caixa de texto crescer sozinha
+        // ============================================================================
+        function autoResize(textarea) {
+            textarea.style.height = 'auto'; 
+            textarea.style.height = textarea.scrollHeight + 'px'; 
+        }
+
+        // ============================================================================
+        // 4. FUNÇÃO: Preenche tudo e estica a caixa
+        // ============================================================================
+        function preencherDadosDoAto() {
+            const atoId = document.getElementById('ato_faltoso').value;
+            const dataAto = document.getElementById('data_ato_manual').value;
+            let nomeFunc = document.getElementById('nome').value;
+            
+            if (!atoId) {
+                document.getElementById('nova_gravidade').value = '';
+                document.getElementById('proxima_acao').value = '';
+                document.getElementById('descricao').value = '';
+                return;
+            }
+
+            if (!nomeFunc || nomeFunc.trim() === "") {
+                nomeFunc = "[NOME DO COLABORADOR]";
+            }
+
+            let dataFormatada = "[DATA DO ATO]";
+            if (dataAto) {
+                dataFormatada = dataAto.split('-').reverse().join('/');
+            }
+
+            const atoEscolhido = listaAtosFaltosos.find(a => a.id == atoId);
+
+            if (atoEscolhido) {
+                document.getElementById('nova_gravidade').value = atoEscolhido.gravidade;
+                document.getElementById('proxima_acao').value = atoEscolhido.medida_1a_ocorrencia;
+
+                const textoPadrao = `Comunicamos que, devido ao ato faltoso ocorrido em ${dataFormatada}, classificado no item ${atoEscolhido.item} (${atoEscolhido.descricao_ato}), o colaborador ${nomeFunc} está recebendo a presente medida disciplinar.\n\nObservação/Regra Infringida:\n${atoEscolhido.descricao_observacao}`;
+
+                const campoDescricao = document.getElementById('descricao');
+                campoDescricao.value = textoPadrao;
+                
+                autoResize(campoDescricao); 
+            }
+        }
+
+        function gerarTextoMedida() {
+            preencherDadosDoAto();
+        }
+
+        // ============================================================================
+        // 5. FUNÇÃO: Carregar a tabela de Histórico Específico
+        // ============================================================================
+        async function carregarHistoricoMedidas(matriculaParaBuscar) {
+            const tbody = document.getElementById('lista-medidas-body');
+            
+            if (!matriculaParaBuscar) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: rgba(255,255,255,0.5);">Digite uma matrícula no formulário acima para consultar o histórico do colaborador.</td></tr>`;
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/medidas/lista?matricula=${matriculaParaBuscar}`); 
+                
+                if (response.ok) {
+                    const medidas = await response.json();
+                    
+                    if (medidas.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #28a745;">Nenhuma medida disciplinar anterior encontrada para esta matrícula. Ficha limpa!</td></tr>`;
+                        return;
+                    }
+
+                    tbody.innerHTML = '';
+                    
+                    medidas.forEach(medida => {
+                        const tr = document.createElement('tr');
+                        
+                        const dataAto = medida.data_ato_faltoso ? new Date(medida.data_ato_faltoso).toLocaleDateString('pt-BR') : '-';
+                        const dataValidade = medida.validade_medida ? new Date(medida.validade_medida).toLocaleDateString('pt-BR') : '-';
+
+                        tr.innerHTML = `
+                            <td>${medida.matricula || '-'}</td>
+                            <td>${medida.nome || '-'}</td>
+                            <td>${dataAto}</td>
+                            <td>${dataValidade}</td>
+                            <td>${medida.tipo_medida || medida.proxima_acao || '-'}</td>
+                            <td>${medida.ato_descricao || medida.desc_ato_faltoso || '-'}</td>
+                            <td>${medida.nova_gravidade || medida.gravidade || '-'}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (error) {
+                console.error("Erro ao buscar histórico:", error);
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #dc3545;">Erro ao carregar o histórico.</td></tr>`;
+            }
+        }
+
+        // ============================================================================
+        // 6. EVENTOS DE INICIALIZAÇÃO E SUBMIT
+        // ============================================================================
+        document.addEventListener("DOMContentLoaded", async () => {
+            
+            // Inicia o dashboard vazio
+            carregarHistoricoMedidas('');
+
+            try {
+                const resAtos = await fetch('/api/medidas/atos-faltosos');
+                if (resAtos.ok) {
+                    listaAtosFaltosos = await resAtos.json();
+                }
+            } catch (e) {
+                console.error("Erro ao carregar atos da base de dados.");
+            }
+
+            try {
+                const resUser = await fetch('/api/auth/me'); 
+                if (resUser.ok) {
+                    const userData = await resUser.json();
+                    document.getElementById('usuario-logado').textContent = userData.nome || 'Usuário Logado';
+                }
+            } catch (e) {}
+
+            // Intercepta o botão de salvar
+            document.getElementById('form-medidas').addEventListener('submit', async (e) => {
+                e.preventDefault(); 
+                
+                const form = e.target;
+                const btnSalvar = document.getElementById('btn-quebrar');
+                const msgRetorno = document.getElementById('mensagem-retorno');
+                
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                btnSalvar.disabled = true;
+                btnSalvar.textContent = "A guardar no sistema...";
+                msgRetorno.textContent = "";
+
+                try {
+                    const response = await fetch('/api/medidas/nova', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    const resultado = await response.json();
+
+                    if (response.ok && resultado.sucesso) {
+                        msgRetorno.className = "sucesso";
+                        msgRetorno.textContent = "✅ Medida disciplinar registada com sucesso!";
+                        
+                        const matriculaSalva = document.getElementById('matricula').value;
+                        form.reset();
+                        atualizarAtos(); 
+                        carregarHistoricoMedidas(matriculaSalva); // Atualiza a tabela
+                    } else {
+                        msgRetorno.className = "erro";
+                        msgRetorno.textContent = "Erro: " + (resultado.mensagem || "Não foi possível gravar.");
+                    }
+                } catch (error) {
+                    msgRetorno.className = "erro";
+                    msgRetorno.textContent = "Erro de ligação. Verifique se o servidor Node.js está a correr.";
+                } finally {
+                    btnSalvar.disabled = false;
+                    btnSalvar.textContent = "Gerar quebra de fluxo";
+                }
+            });
+        });
+
+        // ============================================================================
+        // 7. EVENTO: UPLOAD DA PLANILHA EXCEL
+        // ============================================================================
+        const formUpload = document.getElementById('form-upload');
+        if (formUpload) {
+            formUpload.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const arquivoInput = document.getElementById('arquivo-excel');
+                const msgUpload = document.getElementById('mensagem-upload');
+                const btnImportar = document.getElementById('btn-importar');
+
+                if (arquivoInput.files.length === 0) return;
+
+                const formData = new FormData();
+                formData.append('planilhaExcel', arquivoInput.files[0]);
+
+                btnImportar.disabled = true;
+                btnImportar.textContent = "Processando...";
+                msgUpload.textContent = "";
+
+                try {
+                    const response = await fetch('/api/medidas/importar', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const resultado = await response.json();
+
+                    if (response.ok && resultado.sucesso) {
+                        msgUpload.style.color = "#28a745"; 
+                        msgUpload.textContent = `✅ ${resultado.mensagem}`;
+                        document.getElementById('form-upload').reset(); 
+                        // Após importar base nova, se já houver matricula digitada, refaz a busca
+                        const matriculaDigitada = document.getElementById('matricula').value;
+                        if(matriculaDigitada) {
+                             buscarDadosColaborador();
+                        }
+                    } else {
+                        msgUpload.style.color = "#dc3545"; 
+                        msgUpload.textContent = `❌ Erro: ${resultado.mensagem}`;
+                    }
+                } catch (error) {
+                    msgUpload.style.color = "#dc3545";
+                    msgUpload.textContent = "❌ Erro de conexão ao enviar arquivo.";
+                } finally {
+                    btnImportar.disabled = false;
+                    btnImportar.textContent = "Importar Dados";
+                }
+            });
+        }
+    </script>
 </body>
 </html>
