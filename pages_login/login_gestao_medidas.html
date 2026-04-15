@@ -1,4 +1,4 @@
-<!DOCTYPE HTML>
+<?php require_once('../api/auth_check.php'); ?> <!DOCTYPE HTML>
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8" />
@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     
     <link rel="stylesheet" href="../assets/css/main.css" />
+    <link rel="stylesheet" href="../assets/css/gestao_medidas.css" />
     <noscript><link rel="stylesheet" href="../assets/css/noscript.css" /></noscript>
     
     <style>
@@ -90,7 +91,7 @@
                     // Vamos simular um tempinho de carregamento (1 segundo) e redirecionar
                     setTimeout(function() {
                         // MUDE AQUI PARA O NOME DA SUA PÁGINA PÓS-LOGIN CORRESPONDENTE
-                        window.location.href = "governanca.html"; 
+                        window.location.href = "../pages/painel_gestao_medidas.html"; 
                     }, 1000);
                 });
             }
