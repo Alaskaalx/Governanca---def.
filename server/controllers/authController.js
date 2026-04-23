@@ -24,9 +24,17 @@ export const login = async (req, res) => {
 
         const { tabela: nome_tabela, url: url_destino } = tabelas_modulos[modulo_id];
 
-        // Busca o usuário. Usamos o pool do BD configurado anteriormente.
-        // O `?` evita SQL Injection nos valores, e a tabela vem do dicionário seguro acima.
+        // Busca o usuário...
         const [rows] = await db.query(`SELECT * FROM ${nome_tabela} WHERE username = ? AND ativo = 1`, [username]);
+        
+        // --- COLOCAR O DETETIVE AQUI ---
+        console.log("\n=== DETETIVE DE LOGIN ===");
+        console.log("1. Tabela alvo:", nome_tabela);
+        console.log("2. Usuário digitado no HTML:", `[${username}]`);
+        console.log("3. Resposta do Banco de Dados:", rows);
+        console.log("===========================\n");
+        // -------------------------------
+
         const usuario = rows[0];
 
         if (!usuario) {
