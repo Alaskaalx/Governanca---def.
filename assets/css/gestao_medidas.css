@@ -1,0 +1,114 @@
+input[type="number"],
+input[type="date"] {
+    -moz-appearance: none;
+    -webkit-animation: none;
+    -ms-appearance: none;
+     appearance: none;
+     background-color: transparent;
+     border-radius: 4px;
+        border: solid 1px #ccc;
+        color: inherit;
+        display: block;
+        outline: 0;
+        padding: 0 1rem;
+        text-decoration: none;
+        width: 100%;
+        height: 2.75rem;
+        font-family: 'source sans pro', sans-serif;
+    }
+
+input[type="number"]:focus,
+input[type="date"]:focus {
+    border-color: #ffffff;
+    box-shadow: #ffffff;
+    background-color: rgba(255, 255, 255, 0.175);
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+#main article {
+    width: 60rem;
+    max-width: 100%;
+}
+
+#main article#gestao-form {
+    display: block !important;
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    margin-top: 0 !important;
+
+    width: 100% !important;
+    max-width: 65rem !important;
+}
+
+#main {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-bottom: 4rem;
+}
+
+#header {
+    margin-top: 2rem;
+}
+
+.field.full-width {
+    width: 100% !important;
+}
+
+#mensagem-retorno {
+    margin-top: 1rem;
+    font-weight: bold;
+    text-align: center;
+}
+.sucesso {color: green;}
+.erro {color: red;}
+
+@media screen and (max-width: 980px) {
+    #form-medidas .fields .field.quarter,
+    #form-medidas .fields .field.third,
+    #form-medidas .fields .field.half{
+        width: 100% !important;
+    }
+}
+
+textarea#descricao {
+    overflow: hidden;
+    resize: none;
+    background-color: black;
+    border: 2px solid #ccc;
+    font-weight: 400;
+}
+
+.historico-container {
+    max-block-size: 400px;
+    overflow-y: auto;
+    overflow-x: auto;
+    border: 1px solid #222222;
+    border-radius: 4px;
+    background-color: #030202;
+}
+
+.historico-container table {
+    margin-bottom: 0;
+    white-space: nowrap;
+}
+
+.historico-container th {
+    position: sticky;
+    top: 0;
+    background-color: #2c3136;
+    z-index: 10;
+    border-bottom: 2px solid #ffffff;
+}
+
+.historico-container tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.3);
+}
+
+.historico-container tbody tr:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
