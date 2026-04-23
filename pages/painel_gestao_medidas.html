@@ -5,10 +5,27 @@
     <title>Painel - Gestão de Medidas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     
-    <link rel="stylesheet" href="../assets/css/main.css" />
-    <link rel="stylesheet" href="../assets/css/gestao_medidas.css" />
-    <noscript><link rel="stylesheet" href="../assets/css/noscript.css" /></noscript>
 
+    <link rel="stylesheet" href="/assets/css/main.css" />
+    <link rel="stylesheet" href="/assets/css/gestao_medidas.css" />
+    <noscript><link rel="stylesheet" href="/assets/css/noscript.css" /></noscript>
+
+    <style>
+        #main { 
+            display: flex !important; 
+            flex-direction: column;
+            align-items: center; 
+            padding: 2rem;
+        }
+        #main article { 
+            display: block !important; 
+            opacity: 1 !important; 
+            transform: translateY(0) !important; 
+            margin-top: 0 !important;
+            width: 100%;
+            max-width: 1000px;
+        }
+    </style>
 </head>
 <body class="is-preload">
 
@@ -28,6 +45,7 @@
 
                 <form id="form-medidas">
                     <div class="fields">
+                        
                         <div class="field quarter">
                             <label for="matricula">Matrícula</label>
                             <input type="number" id="matricula" name="matricula" onblur="buscarDadosColaborador()" />
@@ -63,6 +81,7 @@
                             <label for="data_ato_manual">Data do Ato Faltoso (Apenas para o Texto) *</label>
                             <input type="date" id="data_ato_manual" required onchange="preencherDadosDoAto()" />
                         </div>
+                        
                         <div class="field full-width">
                             <label for="nome">Nome do Colaborador</label>
                             <input type="text" id="nome" name="nome" oninput="preencherDadosDoAto()" />
@@ -118,20 +137,9 @@
                     <div id="mensagem-retorno"></div>
                 </form>
 
-                <div class="box" style="background-color: rgba(255,255,255,0.05); text-align: center;">
-                    <h4>Importação Massiva de Colaboradores</h4>
-                    <p style="font-size: 0.8rem; margin-bottom: 1rem;">Selecione uma planilha Excel (.xlsx) para atualizar a base de dados.</p>
-                    
-                    <form id="form-upload" enctype="multipart/form-data" style="margin: 0; display: flex; justify-content: center; gap: 10px; align-items: center;">
-                        <input type="file" id="arquivo-excel" name="planilhaExcel" accept=".xlsx, .xls" required style="width: auto; padding: 0.4rem; background: #fff; color: #000; border-radius: 4px;" />
-                        <button type="submit" class="button primary small" id="btn-importar">Importar Dados</button>
-                    </form>
-                    <div id="mensagem-upload" style="margin-top: 10px; font-weight: bold; font-size: 0.9rem;"></div>
-                </div>
 
-                <hr style="margin: 3rem 0;" /> <h3 class="major">Histórico de Medidas Emitidas</h3>
-
-                
+                <hr style="margin: 3rem 0;" /> 
+                <h3 class="major">Histórico de Medidas Emitidas</h3>
                 
                 <div class="table-wrapper historico-container">
                     <table class="alt" id="tabela-historico">
@@ -165,11 +173,11 @@
 
     <div id="bg"></div>
 
-    <script src="../assets/js/jquery.min.js"></script>
-    <script src="../assets/js/browser.min.js"></script>
-    <script src="../assets/js/breakpoints.min.js"></script>
-    <script src="../assets/js/util.js"></script>
-    <script src="../assets/js/main.js"></script>
+    <script src="/assets/js/jquery.min.js"></script>
+    <script src="/assets/js/browser.min.js"></script>
+    <script src="/assets/js/breakpoints.min.js"></script>
+    <script src="/assets/js/util.js"></script>
+    <script src="/assets/js/main.js"></script>
 
     <script>
         // Array global para guardar os dados vindos da base de dados
@@ -363,14 +371,20 @@
             } catch (e) {
                 console.error("Erro ao carregar atos da base de dados.");
             }
-
+            
             try {
                 const resUser = await fetch('/api/auth/me'); 
-                if (resUser.ok) {
-                    const userData = await resUser.json();
-                    document.getElementById('usuario-logado').textContent = userData.nome || 'Usuário Logado';
+                const userData = await resUser.json();
+                
+                // Se o backend disser que está logado (logado: true)
+                if (userData.logado) {
+                    document.getElementById('usuario-logado').textContent = userData.nome;
+                } else {
+                    document.getElementById('usuario-logado').textContent = 'Visitante (Não logado)';
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.warn("Servidor de autenticação offline.");
+            }
 
             // Intercepta o botão de salvar
             document.getElementById('form-medidas').addEventListener('submit', async (e) => {
@@ -403,7 +417,7 @@
                         const matriculaSalva = document.getElementById('matricula').value;
                         form.reset();
                         atualizarAtos(); 
-                        carregarHistoricoMedidas(matriculaSalva); // Atualiza a tabela
+                        carregarHistoricoMedidas(matriculaSalva); // Atualiza a tabela com o histórico novo
                     } else {
                         msgRetorno.className = "erro";
                         msgRetorno.textContent = "Erro: " + (resultado.mensagem || "Não foi possível gravar.");
@@ -451,6 +465,7 @@
                         msgUpload.style.color = "#28a745"; 
                         msgUpload.textContent = `✅ ${resultado.mensagem}`;
                         document.getElementById('form-upload').reset(); 
+                        
                         // Após importar base nova, se já houver matricula digitada, refaz a busca
                         const matriculaDigitada = document.getElementById('matricula').value;
                         if(matriculaDigitada) {
