@@ -1,13 +1,12 @@
-<?php require_once('../api/auth_check.php'); ?> <!DOCTYPE HTML>
+<!DOCTYPE HTML>
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8" />
     <title>Login Gestão de Medidas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     
-    <link rel="stylesheet" href="../assets/css/main.css" />
-    <link rel="stylesheet" href="../assets/css/gestao_medidas.css" />
-    <noscript><link rel="stylesheet" href="../assets/css/noscript.css" /></noscript>
+    <link rel="stylesheet" href="/assets/css/main.css" />
+    <noscript><link rel="stylesheet" href="/assets/css/noscript.css" /></noscript>
     
     <style>
         #header { margin-top: 2rem; }
@@ -35,7 +34,7 @@
             <article id="login-form">
                 <h2 class="major" id="titulo-login">Login Gestão de Medidas</h2>
 
-                <form id="form-auth" method="post" action="#">
+                <form id="form-auth">
                     <div class="fields">
                         <div class="field">
                             <label for="username">Usuário:</label>
@@ -49,7 +48,7 @@
                     
                     <ul class="actions">
                         <li><button type="submit" id="btn-login" class="primary">Entrar</button></li>
-                        <li><a href="../index.html#navegar" class="button">Voltar</a></li>
+                        <li><a href="/index.html#navegar" class="button">Voltar</a></li>
                     </ul>
                 </form>
 
@@ -65,13 +64,11 @@
 
     <div id="bg"></div>
 
-    
-
-    <script src="../assets/js/jquery.min.js"></script>
-    <script src="../assets/js/browser.min.js"></script>
-    <script src="../assets/js/breakpoints.min.js"></script>
-    <script src="../assets/js/util.js"></script>
-    <script src="../assets/js/main.js"></script>
+    <script src="/assets/js/jquery.min.js"></script>
+    <script src="/assets/js/browser.min.js"></script>
+    <script src="/assets/js/breakpoints.min.js"></script>
+    <script src="/assets/js/util.js"></script>
+    <script src="/assets/js/main.js"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -79,27 +76,48 @@
             const btnLogin = document.getElementById('btn-login');
 
             if(formAuth) {
-                formAuth.addEventListener('submit', function(event) {
-                    // Impede o formulário de recarregar a página (comportamento padrão)
-                    event.preventDefault();
+                formAuth.addEventListener('submit', async function(event) {
+                    event.preventDefault(); // Impede a página de recarregar
 
-                    // Muda o texto do botão para dar um feedback visual de carregamento
-                    btnLogin.innerText = "Entrando...";
-                    btnLogin.style.opacity = "0.7";
+                    btnLogin.innerText = "Validando...";
+                    btnLogin.disabled = true;
 
-                    // Aqui você colocaria a lógica real (API, banco de dados, etc)
-                    // Vamos simular um tempinho de carregamento (1 segundo) e redirecionar
-                    setTimeout(function() {
-                        // MUDE AQUI PARA O NOME DA SUA PÁGINA PÓS-LOGIN CORRESPONDENTE
-                        window.location.href = "../pages/painel_gestao_medidas.html"; 
-                    }, 1000);
+                    // Pega o que o usuário digitou
+                    const username = document.getElementById('username').value;
+                    const password = document.getElementById('password').value;
+
+                    try {
+                        // Bate na porta do nosso servidor Node.js
+                        const response = await fetch('/api/auth/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            // AQUI ESTÁ A MÁGICA: Adicionamos o modulo_id: 5
+                            body: JSON.stringify({ username: username, password: password, modulo_id: 5 })
+                        });
+
+                        const result = await response.json();
+
+                        // Se o Node.js disser que a senha está certa...
+                        if (response.ok && result.sucesso) {
+                            btnLogin.innerText = "Entrando...";
+                            // O backend já nos devolve a url_destino correta!
+                            window.location.href = "/pages/" + result.url_destino; 
+                        } else {
+                            // Se a senha estiver errada, avisa na tela
+                            alert("Acesso negado: " + (result.mensagem || "Usuário ou senha incorretos."));
+                            btnLogin.innerText = "Entrar";
+                            btnLogin.disabled = false;
+                        }
+                    } catch (error) {
+                        console.error("Erro de conexão:", error);
+                        alert("Erro ao conectar com o servidor Node.js. Verifique se ele está rodando!");
+                        btnLogin.innerText = "Entrar";
+                        btnLogin.disabled = false;
+                    }
                 });
             }
         });
     </script>
-
-</body>
-</html>
 
 </body>
 </html>
