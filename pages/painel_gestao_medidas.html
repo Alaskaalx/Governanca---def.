@@ -5,7 +5,6 @@
     <title>Painel - Gestão de Medidas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     
-
     <link rel="stylesheet" href="/assets/css/main.css" />
     <link rel="stylesheet" href="/assets/css/gestao_medidas.css" />
     <noscript><link rel="stylesheet" href="/assets/css/noscript.css" /></noscript>
@@ -44,19 +43,18 @@
                 <p>Preencha os campos abaixo para registrar a medida. Os campos com (*) são obrigatórios.</p>
 
                 <form id="form-medidas">
-                    <div class="fields">
-                        
+                    <div class="fields">                     
                         <div class="field quarter">
                             <label for="matricula">Matrícula</label>
-                            <input type="number" id="matricula" name="matricula" onblur="buscarDadosColaborador()" />
+                            <input type="text" id="matricula" name="matricula" onblur="buscarDadosColaborador()" />
                         </div>
                         <div class="field quarter">
                             <label for="admissao">Admissão</label>
-                            <input type="date" id="admissao" name="admissao" />
+                            <input type="date" id="admissao" name="admissao" readonly />
                         </div>
                         <div class="field quarter">
                             <label for="volume_medidas">Vol. Medidas Recebidas</label>
-                            <input type="number" id="volume_medidas" name="volume_medidas" />
+                            <input type="number" id="volume_medidas" name="volume_medidas" readonly />
                         </div>
                         
                         <div class="field quarter">
@@ -84,37 +82,37 @@
                         
                         <div class="field full-width">
                             <label for="nome">Nome do Colaborador</label>
-                            <input type="text" id="nome" name="nome" oninput="preencherDadosDoAto()" />
+                            <input type="text" id="nome" name="nome" readonly />
                         </div>
                         
                         <div class="field quarter">
                             <label for="nova_gravidade">Nova Gravidade</label>
-                            <input type="text" id="nova_gravidade" name="nova_gravidade" readonly style="background-color: rgba(255,255,255,0.05);" />
+                            <input type="text" id="nova_gravidade" name="nova_gravidade" readonly />
                         </div>
                         
                         <div class="field quarter">
                             <label for="proxima_acao">Próxima Ação</label>
-                            <input type="text" id="proxima_acao" name="proxima_acao" readonly style="background-color: rgba(255,255,255,0.05);" />
+                            <input type="text" id="proxima_acao" name="proxima_acao" readonly />
                         </div>
 
                         <div class="field quarter">
                             <label for="gestor_1">1º Gestor</label>
-                            <input type="text" id="gestor_1" name="gestor_1" />
+                            <input type="text" id="gestor_1" name="gestor_1" readonly/>
                         </div>
 
                         <div class="field quarter">
                             <label for="gestor_2">2º Gestor</label>
-                            <input type="text" id="gestor_2" name="gestor_2" />
+                            <input type="text" id="gestor_2" name="gestor_2" readonly />
                         </div>
 
                         <div class="field half">
                             <label for="gerente">Gerente</label>
-                            <input type="text" id="gerente" name="gerente" />
+                            <input type="text" id="gerente" name="gerente" readonly />
                         </div>
 
                         <div class="field half">
                             <label for="diretor">Diretor</label>
-                            <input type="text" id="diretor" name="diretor" />
+                            <input type="text" id="diretor" name="diretor" readonly />
                         </div>
 
                         <div class="field">
@@ -137,7 +135,6 @@
                     <div id="mensagem-retorno"></div>
                 </form>
 
-
                 <hr style="margin: 3rem 0;" /> 
                 <h3 class="major">Histórico de Medidas Emitidas</h3>
                 
@@ -152,11 +149,12 @@
                                 <th>Tipo de Medida</th>
                                 <th>Ato Faltoso</th>
                                 <th>Gravidade</th>
+                                <th>Cliente</th>
                             </tr>
                         </thead>
                         <tbody id="lista-medidas-body">
                             <tr>
-                                <td colspan="7" style="text-align: center; color: rgba(255,255,255,0.5);">Nenhuma medida encontrada ou carregando...</td>
+                                <td colspan="8" style="text-align: center; color: rgba(255,255,255,0.5);">Nenhuma medida encontrada ou carregando...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -193,6 +191,7 @@
             if (!matricula) return;
 
             try {
+                // Aqui a mágica acontece: O Backend fará a busca nas 2 tabelas (Histórico e Cadastro Geral)
                 const response = await fetch(`/api/medidas/colaborador/${matricula}`);
                 const result = await response.json();
 
@@ -206,10 +205,12 @@
                     document.getElementById('gerente').value = dados.gerente || '';
                     document.getElementById('diretor').value = dados.diretor || '';
 
-                    // Formata a data de admissão para o input date
+                    // Formata a data de admissão para o input date (se existir na base)
                     const dataAdmissao = dados.data_admissao || dados.admissao;
                     if (dataAdmissao) {
                         document.getElementById('admissao').value = dataAdmissao.split('T')[0];
+                    } else {
+                        document.getElementById('admissao').value = '';
                     }
 
                     // Se já tiver ato escolhido, atualiza o texto oficial com o nome
@@ -217,11 +218,13 @@
                         preencherDadosDoAto();
                     }
                     
-                    // Chama a tabela para carregar o histórico dessa matrícula
+                    // Chama a tabela para carregar o histórico dessa matrícula (apenas histórico real)
                     carregarHistoricoMedidas(matricula);
 
                 } else {
-                    console.log("Matrícula não encontrada.");
+                    console.log("Matrícula não encontrada em nenhuma base de dados.");
+                    // Opcional: Limpa o histórico anterior se digitar matrícula inválida
+                    carregarHistoricoMedidas('invalida');
                 }
             } catch (error) {
                 console.error("Erro ao buscar os dados da matrícula:", error);
@@ -313,8 +316,8 @@
         async function carregarHistoricoMedidas(matriculaParaBuscar) {
             const tbody = document.getElementById('lista-medidas-body');
             
-            if (!matriculaParaBuscar) {
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: rgba(255,255,255,0.5);">Digite uma matrícula no formulário acima para consultar o histórico do colaborador.</td></tr>`;
+            if (!matriculaParaBuscar || matriculaParaBuscar === 'invalida') {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: rgba(255,255,255,0.5);">Digite uma matrícula no formulário acima para consultar o histórico do colaborador.</td></tr>`;
                 return;
             }
 
@@ -325,15 +328,17 @@
                     const medidas = await response.json();
                     
                     if (medidas.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #28a745;">Nenhuma medida disciplinar anterior encontrada para esta matrícula. Ficha limpa!</td></tr>`;
+                        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #28a745;">Nenhuma medida disciplinar anterior encontrada para esta matrícula. Ficha limpa!</td></tr>`;
                         return;
                     }
 
                     tbody.innerHTML = '';
                     
+                    // Como a busca não tem limite, o forEach vai desenhar TODAS as linhas encontradas no banco
                     medidas.forEach(medida => {
                         const tr = document.createElement('tr');
                         
+                        // Garante que não vai dar erro se a data vier vazia
                         const dataAto = medida.data_ato_faltoso ? new Date(medida.data_ato_faltoso).toLocaleDateString('pt-BR') : '-';
                         const dataValidade = medida.validade_medida ? new Date(medida.validade_medida).toLocaleDateString('pt-BR') : '-';
 
@@ -342,19 +347,20 @@
                             <td>${medida.nome || '-'}</td>
                             <td>${dataAto}</td>
                             <td>${dataValidade}</td>
-                            <td>${medida.tipo_medida || medida.proxima_acao || '-'}</td>
-                            <td>${medida.ato_descricao || medida.desc_ato_faltoso || '-'}</td>
-                            <td>${medida.nova_gravidade || medida.gravidade || '-'}</td>
+                            <td>${medida.tipo_medida || '-'}</td>
+                            <td>${medida.desc_ato_faltoso || '-'}</td>
+                            <td>${medida.gravidade || '-'}</td>
+                            <td>${medida.cliente || '-'}</td> 
                         `;
                         tbody.appendChild(tr);
                     });
                 }
             } catch (error) {
                 console.error("Erro ao buscar histórico:", error);
-                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #dc3545;">Erro ao carregar o histórico.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #dc3545;">Erro ao carregar o histórico.</td></tr>`;
             }
         }
-
+        
         // ============================================================================
         // 6. EVENTOS DE INICIALIZAÇÃO E SUBMIT
         // ============================================================================
@@ -363,6 +369,7 @@
             // Inicia o dashboard vazio
             carregarHistoricoMedidas('');
 
+            // Busca os atos faltosos no banco
             try {
                 const resAtos = await fetch('/api/medidas/atos-faltosos');
                 if (resAtos.ok) {
@@ -372,11 +379,11 @@
                 console.error("Erro ao carregar atos da base de dados.");
             }
             
+            // Verifica o usuário logado
             try {
                 const resUser = await fetch('/api/auth/me'); 
                 const userData = await resUser.json();
                 
-                // Se o backend disser que está logado (logado: true)
                 if (userData.logado) {
                     document.getElementById('usuario-logado').textContent = userData.nome;
                 } else {
@@ -386,7 +393,7 @@
                 console.warn("Servidor de autenticação offline.");
             }
 
-            // Intercepta o botão de salvar
+            // Intercepta o botão de salvar para mandar para a tabela histórica
             document.getElementById('form-medidas').addEventListener('submit', async (e) => {
                 e.preventDefault(); 
                 
@@ -412,7 +419,7 @@
 
                     if (response.ok && resultado.sucesso) {
                         msgRetorno.className = "sucesso";
-                        msgRetorno.textContent = "✅ Medida disciplinar registada com sucesso!";
+                        msgRetorno.textContent = "✅ Medida disciplinar registrada com sucesso!";
                         
                         const matriculaSalva = document.getElementById('matricula').value;
                         form.reset();
@@ -432,58 +439,6 @@
             });
         });
 
-        // ============================================================================
-        // 7. EVENTO: UPLOAD DA PLANILHA EXCEL
-        // ============================================================================
-        const formUpload = document.getElementById('form-upload');
-        if (formUpload) {
-            formUpload.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const arquivoInput = document.getElementById('arquivo-excel');
-                const msgUpload = document.getElementById('mensagem-upload');
-                const btnImportar = document.getElementById('btn-importar');
-
-                if (arquivoInput.files.length === 0) return;
-
-                const formData = new FormData();
-                formData.append('planilhaExcel', arquivoInput.files[0]);
-
-                btnImportar.disabled = true;
-                btnImportar.textContent = "Processando...";
-                msgUpload.textContent = "";
-
-                try {
-                    const response = await fetch('/api/medidas/importar', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    const resultado = await response.json();
-
-                    if (response.ok && resultado.sucesso) {
-                        msgUpload.style.color = "#28a745"; 
-                        msgUpload.textContent = `✅ ${resultado.mensagem}`;
-                        document.getElementById('form-upload').reset(); 
-                        
-                        // Após importar base nova, se já houver matricula digitada, refaz a busca
-                        const matriculaDigitada = document.getElementById('matricula').value;
-                        if(matriculaDigitada) {
-                             buscarDadosColaborador();
-                        }
-                    } else {
-                        msgUpload.style.color = "#dc3545"; 
-                        msgUpload.textContent = `❌ Erro: ${resultado.mensagem}`;
-                    }
-                } catch (error) {
-                    msgUpload.style.color = "#dc3545";
-                    msgUpload.textContent = "❌ Erro de conexão ao enviar arquivo.";
-                } finally {
-                    btnImportar.disabled = false;
-                    btnImportar.textContent = "Importar Dados";
-                }
-            });
-        }
     </script>
 </body>
 </html>
