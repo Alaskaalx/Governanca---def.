@@ -28,39 +28,108 @@ router.get('/atos-faltosos', async (req, res) => {
 router.get('/colaborador/:matricula', async (req, res) => {
     try {
         const { matricula } = req.params;
-        // Busca o último registro desse colaborador na base consolidada
-        const query = 'SELECT * FROM medidas_disciplinares_consolidado WHERE matricula = ? ORDER BY id DESC LIMIT 1';
-        const [linhas] = await db.query(query, [matricula]);
-        
-        if (linhas.length > 0) {
-            res.json({ sucesso: true, dados: linhas[0] });
-        } else {
-            res.status(404).json({ sucesso: false, mensagem: "Matrícula não encontrada no histórico." });
+
+        // ETAPA 1: Busca na tabela de Histórico primeiro
+        const queryHistorico = 'SELECT * FROM base_colaboradores_historico WHERE matricula = ? ORDER BY id DESC LIMIT 1';
+        const [resultadoHistorico] = await db.query(queryHistorico, [matricula]);
+
+        if (resultadoHistorico.length > 0) {
+            console.log(` Colaborador ${matricula} encontrado no Histórico.`);
+            
+            const h = resultadoHistorico[0];
+            
+            // Formatamos os dados para que o Frontend entenda independentemente de onde veio
+            const dadosHistorico = {
+                matricula: h.matricula,
+                nome: h.nome,
+                gestor_1: h.primeiro_gestor,
+                gestor_2: h.segundo_gestor,
+                gerente: h.gerente,
+                diretor: h.diretor_superintendente, // Pode não existir no histórico, mas colocamos para garantir
+                filial: h.filial,
+                admissao: h.data_admissao
+            };
+            
+            return res.json({ sucesso: true, origem: 'historico', dados: dadosHistorico });
         }
+        
+        console.log(` Matrícula ${matricula} não está no histórico. Buscando na Base Geral...`);
+
+        // ETAPA 2: Se não achou, busca no Cadastro Geral
+        const queryCadastro = 'SELECT * FROM cadastro_colaborador WHERE matricula_re = ? LIMIT 1';
+        const [resultadoCadastro] = await db.query(queryCadastro, [matricula]);
+
+        if (resultadoCadastro.length > 0) {
+            const c = resultadoCadastro[0];
+
+            const dadosCadastro = {
+                matricula: c.matricula_re,
+                nome: c.nome_colaborador,
+                gestor_1: c.primeiro_gestor,
+                gestor_2: c.segundo_gestor,
+                gerente: c.gerente,
+                diretor: c.diretor_superintendente,
+                filial: c.operacao,
+                admissao: '' // Como o cadastro RH não tem admissão, enviamos vazio
+            };
+
+            console.log(` Colaborador ${matricula} encontrado no Cadastro Geral.`);
+            return res.json({ sucesso: true, origem: 'suporte', dados: dadosCadastro });
+        }
+        
+        // ETAPA 3: Se não achou em lugar nenhum
+        res.status(404).json({
+            sucesso: false,
+            mensagem: "Colaborador não localizado em nenhuma das bases."
+        });
+
     } catch (error) {
-        console.error("Erro ao consultar colaborador:", error);
-        res.status(500).json({ sucesso: false, mensagem: "Erro ao consultar a base de colaboradores." });
+        console.error("❌ Erro ao buscar colaborador:", error);
+        res.status(500).json({ sucesso: false, mensagem: "Erro no servidor ao buscar colaborador." });
     }
 });
 
 
 // ============================================================================
-// 3. ROTA: DASHBOARD / HISTÓRICO (Traz apenas o histórico consultado)
+// 3. ROTA: DASHBOARD / HISTÓRICO (Traz todo o histórico e puxa a operação)
 // ============================================================================
 router.get('/lista', async (req, res) => {
     try {
-        const { matricula } = req.query; // Pega a matrícula enviada pelo frontend
+        const { matricula } = req.query;
 
         if (!matricula) {
-            return res.json([]); // Se não mandou matrícula, devolve vazio
+            return res.json([]); 
         }
 
-        // A MÁGICA: Puxa o histórico apenas daquela matrícula E apenas se for uma medida real (texto_gerado IS NOT NULL)
+        // A MÁGICA: O comando ORDER BY com CASE força a progressão lógica.
+        // O desempate (caso haja iguais) é feito pela validade_medida.
         const query = `
-            SELECT * FROM medidas_disciplinares_consolidado 
-            WHERE matricula = ? AND texto_gerado IS NOT NULL 
-            ORDER BY data_registro DESC
+            SELECT 
+                h.matricula,
+                h.nome,
+                h.data_ato_faltoso,
+                h.validade_medida,
+                h.nome_ocorrencia AS tipo_medida,
+                h.desc_ato_faltoso,
+                h.tipo_gravidade AS gravidade,
+                c.operacao AS cliente
+            FROM base_colaboradores_historico h
+            LEFT JOIN cadastro_colaborador c ON h.matricula = c.matricula_re
+            WHERE h.matricula = ?
+            ORDER BY 
+                CASE 
+                    WHEN h.nome_ocorrencia LIKE '%1ª%' THEN 1
+                    WHEN h.nome_ocorrencia LIKE '%2ª%' THEN 2
+                    WHEN h.nome_ocorrencia LIKE '%3ª%' THEN 3
+                    WHEN h.nome_ocorrencia LIKE '%SUSPENSÃO%' THEN 4
+                    WHEN h.nome_ocorrencia LIKE '%JUSTA CAUSA%' THEN 5
+                    WHEN h.nome_ocorrencia LIKE '%DEMISSÃO%' THEN 6
+                    ELSE 99 
+                END ASC,
+                h.validade_medida DESC,
+                h.data_ato_faltoso DESC
         `;
+        
         const [linhas] = await db.query(query, [matricula]);
         
         res.json(linhas);
