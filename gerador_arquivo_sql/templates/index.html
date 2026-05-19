@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor de Planilhas para SQL</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        function mostrarNomeArquivo(input) {
+            const p = document.getElementById('nome-arquivo');
+            if (input && input.files && input.files.length > 0) {
+                p.textContent = `Arquivo selecionado: ${input.files[0].name}`;
+                p.classList.remove('hidden');
+            } else {
+                p.classList.add('hidden');
+            }
+        }
+
+        function alternarChavePrimaria(modo) {
+            const container = document.getElementById('container-chave');
+            const input = document.getElementById('chave_primaria');
+            
+            if (modo === 'atualizar') {
+                container.classList.remove('hidden');
+                input.required = true;
+            } else {
+                container.classList.add('hidden');
+                input.required = false;
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-lg border border-gray-700">
+        <header class="mb-8 text-center">
+            <h1 class="text-2xl font-bold text-emerald-400 mb-2">Conversor SQL para XAMPP</h1>
+            <p class="text-sm text-gray-400">Transforme planilhas Excel/CSV em scripts SQL estruturados de forma segura e local.</p>
+        </header>
+
+        <form action="/converter" method="POST" enctype="multipart/form-data" class="space-y-6">
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Selecione a Planilha (.xlsx ou .csv)</label>
+                <div class="flex flex-col items-center justify-center w-full p-6 border-2 border-gray-600 border-dashed rounded-xl bg-gray-750">
+                    <svg class="w-8 h-8 mb-3 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-8m0 8l-3-3m3 3l3-3M3 21h18M3 10h18M3 6h18"></path>
+                    </svg>
+                    
+                    <label for="file-upload" class="cursor-pointer bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg border border-gray-500 transition-colors inline-block mb-2">
+                        Escolher Arquivo
+                    </label>
+                    <input id="file-upload" name="planilha" type="file" accept=".xlsx, .xls, .csv" class="hidden" required onchange="mostrarNomeArquivo(this)" />
+                    
+                    <p class="text-xs text-gray-400">Suporta formatos XLSX, XLS ou CSV</p>
+                    
+                    <p id="nome-arquivo" class="text-xs text-emerald-400 mt-3 font-semibold italic hidden bg-gray-900 px-3 py-1 rounded border border-emerald-500/30"></p>
+                </div>
+            </div>
+
+            <div>
+                <label for="tabela" class="block text-sm font-medium text-gray-300 mb-1">Nome da Tabela no Banco de Dados</label>
+                <input type="text" id="tabela" name="tabela" value="cadastro_colaborador" required
+                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Estratégia de Importação</label>
+                <div class="grid grid-cols-2 gap-4">
+                    <label class="flex items-center p-3 bg-gray-700 rounded-lg border border-gray-600 cursor-pointer hover:border-emerald-500 transition-colors">
+                        <input type="radio" name="modo" value="substituir" checked class="text-emerald-500 focus:ring-0" onclick="alternarChavePrimaria('substituir')">
+                        <span class="ml-2 text-sm font-medium text-white">Substituir Dados (Truncate)</span>
+                    </label>
+                    <label class="flex items-center p-3 bg-gray-700 rounded-lg border border-gray-600 cursor-pointer hover:border-emerald-500 transition-colors">
+                        <input type="radio" name="modo" value="atualizar" class="text-emerald-500 focus:ring-0" onclick="alternarChavePrimaria('atualizar')">
+                        <span class="ml-2 text-sm font-medium text-white">Atualizar Existentes (Upsert)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="container-chave" class="hidden">
+                <label for="chave_primaria" class="block text-sm font-medium text-gray-300 mb-1">Coluna de Identificação Única (Chave Primária)</label>
+                <input type="text" id="chave_primaria" name="chave_primaria" value="matricula_re"
+                    class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                    placeholder="Ex: matricula_re">
+                <p class="text-xs text-gray-400 mt-1">Gera a cláusula <code class="text-emerald-300">ON DUPLICATE KEY UPDATE</code> para atualizar os dados caso a matrícula já exista no XAMPP.</p>
+            </div>
+
+            <button type="submit" 
+                class="w-full bg-emerald-500 hover:bg-emerald-600 text-gray-900 font-bold py-3 px-4 rounded-xl transition-colors duration-200 shadow-md transform active:scale-95 text-center block">
+                Processar e Gerar Arquivo SQL
+            </button>
+        </form>
+    </div>
+
+</body>
+</html>
