@@ -34,7 +34,7 @@ router.get('/colaborador/:matricula', async (req, res) => {
         const [resultadoHistorico] = await db.query(queryHistorico, [matricula]);
 
         if (resultadoHistorico.length > 0) {
-            console.log(` Colaborador ${matricula} encontrado no Histórico.`);
+            console.log(`✅ Colaborador ${matricula} encontrado no Histórico.`);
             
             const h = resultadoHistorico[0];
             
@@ -53,7 +53,7 @@ router.get('/colaborador/:matricula', async (req, res) => {
             return res.json({ sucesso: true, origem: 'historico', dados: dadosHistorico });
         }
         
-        console.log(` Matrícula ${matricula} não está no histórico. Buscando na Base Geral...`);
+        console.log(`⚠️ Matrícula ${matricula} não está no histórico. Buscando na Base Geral...`);
 
         // ETAPA 2: Se não achou, busca no Cadastro Geral
         const queryCadastro = 'SELECT * FROM cadastro_colaborador WHERE matricula_re = ? LIMIT 1';
@@ -73,7 +73,7 @@ router.get('/colaborador/:matricula', async (req, res) => {
                 admissao: '' // Como o cadastro RH não tem admissão, enviamos vazio
             };
 
-            console.log(` Colaborador ${matricula} encontrado no Cadastro Geral.`);
+            console.log(`✅ Colaborador ${matricula} encontrado no Cadastro Geral.`);
             return res.json({ sucesso: true, origem: 'suporte', dados: dadosCadastro });
         }
         
