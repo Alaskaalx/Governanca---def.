@@ -51,7 +51,7 @@ app.use('/', express.static(path.join(__dirname, '../')));
 // =======================================================================
 // INICIANDO O SERVIDOR
 // =======================================================================
-const PORT = 3000;
+const PORT = 3002;
 app.listen(PORT, () => {
     console.log(`Servidor rodando liso!`);
     console.log(`Acesse clicando aqui: http://localhost:${PORT}/index.html`);
