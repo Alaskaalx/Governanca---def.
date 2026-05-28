@@ -4,8 +4,8 @@ import mysql from 'mysql2/promise';
 const pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
-    password: '',
-    database: 'gov_corp_senhas_db',
+    password: 'G0v3rn4nc453rv3r2001', // <-- Coloque a senha do MySQL Workbench aqui
+    database: 'gov_corp',
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0

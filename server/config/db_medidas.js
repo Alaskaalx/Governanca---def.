@@ -1,14 +1,14 @@
 import mysql from 'mysql2/promise';
 
-// Cria um pool exclusivo para o banco das páginas (Gestão de Medidas)
-const poolMedidas = mysql.createPool({
-    host: 'localhost',
+const db = mysql.createPool({
+    host: '127.0.0.1', // <-- Mude de localhost para 127.0.0.1
     user: 'root',
-    password: '',
-    database: 'gov_corp_pages_gm_db', // <-- Note que aqui é o NOVO banco!
+    password: 'G0v3rn4nc453rv3r2001', // <-- A sua senha do Workbench
+    database: 'gov_corp',
+    port: 3306,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
 });
 
-export default poolMedidas;
+export default db;
