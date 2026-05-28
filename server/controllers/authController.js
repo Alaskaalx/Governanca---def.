@@ -1,4 +1,4 @@
-import db from '../config/db.js';
+import db from '../config/db_medidas.js';
 import bcrypt from 'bcrypt';
 
 export const login = async (req, res) => {
@@ -69,5 +69,72 @@ export const login = async (req, res) => {
     } catch (error) {
         console.error(error);
         return res.status(500).json({ sucesso: false, mensagem: "Erro interno no servidor." });
+    }
+};
+
+// NOVA FUNÇÃO: Executa a troca de senha obrigatória do primeiro acesso
+export const alterarSenha = async (req, res) => {
+    try {
+        const { username, nova_senha, tabela_alvo } = req.body;
+
+        if (!username || !nova_senha || !tabela_alvo) {
+            return res.status(400).json({ sucesso: false, mensagem: "Dados insuficientes para alterar a senha." });
+        }
+
+        // Lista de tabelas permitidas (White-list de segurança contra SQL Injection)
+        const tabelasPermitidas = [
+            'login_compliance', 
+            'login_monitoramento', 
+            'login_auditoria_sites', 
+            'login_auditoria_processos', 
+            'login_gestao_medidas'
+        ];
+
+        if (!tabelasPermitidas.includes(tabela_alvo)) {
+            return res.status(400).json({ sucesso: false, message: "Tabela de destino inválida." });
+        }
+
+        // 1. Gera o Hash seguro com bcrypt para a nova senha digitada pelo usuário
+        const salt = await bcrypt.genSalt(10);
+        const novoHashSessao = await bcrypt.hash(nova_senha, salt);
+
+        // 2. Atualiza a senha no banco e muda primeiro_acesso para 0
+        const queryUpdate = `UPDATE ${tabela_alvo} SET senha_hash = ?, primeiro_acesso = 0 WHERE username = ?`;
+        const [result] = await db.query(queryUpdate, [novoHashSessao, username]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ sucesso: false, mensagem: "Usuário não encontrado para atualização." });
+        }
+
+        // 3. Busca os dados atualizados do usuário para já criar a sessão dele diretamente
+        const [rows] = await db.query(`SELECT * FROM ${tabela_alvo} WHERE username = ?`, [username]);
+        const usuarioAtualizado = rows[0];
+
+        // Mapeamento de URLs para redirecionar após a troca de senha com sucesso
+        const urls_modulos = {
+            'login_compliance': 'painel_governanca.html',
+            'login_monitoramento': 'painel_monitoramento.html',
+            'login_auditoria_sites': 'painel_auditoria_sites.html',
+            'login_auditoria_processos': 'painel_auditoria_processos.html',
+            'login_gestao_medidas': 'painel_gestao_medidas.html'
+        };
+
+        // 4. Cria a sessão do usuário automaticamente (Salva no servidor)
+        req.session.usuario_id = usuarioAtualizado.id;
+        req.session.usuario_nome = usuarioAtualizado.nome;
+        req.session.usuario_perfil = usuarioAtualizado.perfil;
+        req.session.modulo_atual = tabela_alvo;
+
+        // 5. Retorna sucesso e a URL para onde ele deve ser jogado agora que está com a senha nova
+        return res.json({
+            sucesso: true,
+            mensagem: "Senha cadastrada com sucesso!",
+            url_destino: urls_modulos[tabela_alvo],
+            perfil: usuarioAtualizado.perfil
+        });
+
+    } catch (error) {
+        console.error("Erro na alteração de senha de primeiro acesso:", error);
+        return res.status(500).json({ sucesso: false, mensagem: "Erro interno ao redefinir senha." });
     }
 };
