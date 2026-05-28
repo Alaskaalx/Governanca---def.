@@ -1,16 +1,9 @@
--- ========================================================
--- 1. CRIAÇÃO DO BANCO E LIMPEZA (CUIDADO: Apaga dados anteriores)
--- ========================================================
 CREATE DATABASE IF NOT EXISTS gov_corp_pages_gm_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE gov_corp_pages_gm_db;
 
 DROP TABLE IF EXISTS medidas_disciplinares_consolidado;
 DROP TABLE IF EXISTS atos_faltosos;
 DROP TABLE IF EXISTS grupos;
-
--- ========================================================
--- 2. TABELAS DE REGRAS E DOMÍNIOS (Grupos e Atos)
--- ========================================================
 
 -- Tabela de Grupos
 CREATE TABLE grupos (
@@ -30,11 +23,6 @@ CREATE TABLE atos_faltosos (
     FOREIGN KEY (grupo_id) REFERENCES grupos(id)
 );
 
-
-
--- ========================================================
--- 3. TABELA SUPER CONSOLIDADA (Histórico + Base de Colaboradores)
--- ========================================================
 -- banco desconsiderado
 CREATE TABLE medidas_disciplinares_consolidado (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -88,9 +76,6 @@ CREATE TABLE medidas_disciplinares_consolidado (
     FOREIGN KEY (ato_faltoso_id) REFERENCES atos_faltosos(id)
 );
 
--- ========================================================
--- 4. INSERÇÃO DOS DADOS FIXOS (Populando as regras)
--- ========================================================
 
 -- Inserindo os 4 Grupos Principais
 INSERT INTO grupos (id, nome_grupo) VALUES 
@@ -155,11 +140,6 @@ INSERT INTO atos_faltosos (grupo_id, descricao_ato, item, gravidade, medida_1a_o
 (4, 'NÃO ACEITE NA CAMPANHA', '5.4.5', 'MODERADA', 'Advertência', 'É imprescindível que o colaborador realize a assinatura eletrônica no Rv System para confirmar sua participação na campanha, dentro do período de vigência da mesma, sendo também necessária a assinatura eletrônica confirmando a ciência do resultado apurado, antes da data de pagamento ou concessão de benefício;\n\nGRAVIDADE MODERADA DE QUALIDADE:\n\n• O não aceite a campanha torna o Colaborador inelegível àquela remuneração variável e o não aceite a campanha a qual participou, culminará na concordância tácita, todavia, a recorrência de não assinatura dando ciência ao resultado da campanha será penalizada com advertência, suspensão e na reiteração a aplicação de justa causa fundada na insubordinação as políticas da Companhia.');
 
 
-
--- ========================================================
--- 5. ECADOP BASE (Base de Colaboradores sem Histórico)
--- ========================================================
-
 CREATE TABLE cadastro_colaborador (
     id INT AUTO_INCREMENT PRIMARY KEY,
     matricula_re VARCHAR(50) NOT NULL,
@@ -173,9 +153,6 @@ CREATE TABLE cadastro_colaborador (
     INDEX (matricula_re) -- Isso torna a busca muito mais rápida
 );
 
--- ========================================================
--- 6. TABELA SUPER CONSOLIDADA (Histórico + Base de Colaboradores)
--- ========================================================
 
 CREATE TABLE base_colaboradores_historico (
     id INT AUTO_INCREMENT PRIMARY KEY,
