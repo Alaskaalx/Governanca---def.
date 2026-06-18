@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Painel - Compliance & Governança</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+
+    <link rel="stylesheet" href="/assets/css/main.css" />
+    <link rel="stylesheet" href="/src/components/page_painel_governanca/css/painel_governanca.css" />
+    <link rel="stylesheet" href="/assets/css/visualCardGov.css" />
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
+
+    <noscript>
+        <link rel="stylesheet" href="/assets/css/noscript.css" />
+    </noscript>
+
+    <style>
+        /* Correções de layout e alinhamento para o tipo "url" */
+        input[type="url"] {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            border: solid 1px rgba(255, 255, 255, 0.15);
+            color: inherit;
+            display: block;
+            outline: 0;
+            padding: 0 1rem;
+            width: 100%;
+            height: 2.75rem;
+        }
+
+        /* Layout horizontal elegante para filtros */
+        .filtros-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            align-items: flex-end;
+            margin-bottom: 1.5rem;
+        }
+
+        .filtros-row>div {
+            flex: 1;
+            min-width: 200px;
+        }
+    </style>
+</head>
+
+<body class="is-preload">
+
+    <div id="layout-container">
+
+        <nav id="sidebar">
+            <h3>Menu Governança</h3>
+            <ul>
+                <li>
+                    <a class="menu-link active" data-target="sec-documentos">
+                        <i class="icon solid fa-file-alt"></i> Documentos Normativos
+                    </a>
+                </li>
+                <li>
+                    <a class="menu-link" data-target="sec-indicadores">
+                        <i class="icon solid fa-chart-bar"></i> Indicadores & Metas
+                    </a>
+                </li>
+            </ul>
+            <div style="margin-top: 2rem;">
+                <a href="/index.html#navegar" class="button small fit icon solid fa-arrow-left">Sair do Painel</a>
+            </div>
+        </nav>
+
+        <div id="main-content">
+
+            <article id="sec-documentos" class="content-section active-section">
+
+                <header class="major"
+                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                    <h2>Documentos Normativos</h2>
+                    <ul class="actions">
+                        <li><button id="btn-exportar-pdf" class="button primary small icon solid fa-download">Exportar
+                                PDF</button></li>
+                    </ul>
+                </header>
+
+                <section>
+                    <h3>Adicionar Novo Documento</h3>
+                    <form id="form-add-doc">
+                        <div class="fields">
+                            <div class="field half">
+                                <label for="doc-nome">Nome do Documento</label>
+                                <input type="text" id="doc-nome" placeholder="Ex: Norma ABNT-123" required />
+                            </div>
+                            <div class="field half">
+                                <label for="doc-link">URL / Link</label>
+                                <input type="url" id="doc-link" placeholder="https://..." />
+                            </div>
+                            <div class="field half">
+                                <label for="doc-tipo">Tipo de Documento</label>
+                                <input type="text" id="doc-tipo" placeholder="Ex: Política, Procedimento" required />
+                            </div>
+                            <div class="field half">
+                                <label for="doc-area">Área Responsável</label>
+                                <input type="text" id="doc-area" placeholder="Ex: Jurídico, TI" required />
+                            </div>
+                            <div class="field half">
+                                <label for="doc-data">Data de Validade</label>
+                                <input type="text" id="doc-data" class="flatpickr-date"
+                                    placeholder="Selecione uma data..." required />
+                            </div>
+                            <div class="field half">
+                                <label for="doc-status">Status</label>
+                                <select id="doc-status" required>
+                                    <option value="Elaboração">Elaboração</option>
+                                    <option value="Aguardando aprovação">Aguardando aprovação</option>
+                                    <option value="Pendente de publicação">Pendente de publicação</option>
+                                    <option value="Publicada">Publicada</option>
+                                </select>
+                            </div>
+
+                            <div class="field" style="width: 100%;">
+                                <label>Importar Documento Original (PDF, Word)</label>
+                                <ul class="actions" style="margin: 0; display: flex; align-items: center; gap: 1rem;">
+                                    <li>
+                                        <label for="doc-arquivo" class="button primary small icon solid fa-upload"
+                                            style="margin: 0; cursor: pointer;">
+                                            Escolher Arquivo
+                                        </label>
+                                        <input type="file" id="doc-arquivo" accept=".pdf,.doc,.docx" required
+                                            style="display: none;" />
+                                    </li>
+                                    <li>
+                                        <span id="doc-arquivo-nome-display"
+                                            style="font-size: 0.9em; opacity: 0.7; font-weight: bold;">
+                                            Nenhum arquivo selecionado
+                                        </span>
+                                    </li>
+                                </ul>
+                            </div>
+
+                        </div>
+                        <ul class="actions" style="margin-top: 1.5rem;">
+                            <li><button type="submit" class="button primary small icon solid fa-plus"
+                                    style="height: 2.75rem; line-height: 2.75rem;">Adicionar Documento</button></li>
+                        </ul>
+                    </form>
+                </section>
+
+                <hr />
+
+                <section>
+                    <h3><i class="icon solid fa-filter"></i> Filtros</h3>
+                    <div class="filtros-row">
+                        <div>
+                            <label>Tipo de Documento</label>
+                            <select id="filter-tipo">
+                                <option value="all">Todos os Tipos</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Área Responsável</label>
+                            <select id="filter-area">
+                                <option value="all">Todas as Áreas</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Status</label>
+                            <select id="filter-status">
+                                <option value="all">Todos os Status</option>
+                                <option value="Elaboração">Elaboração</option>
+                                <option value="Aguardando aprovação">Aguardando aprovação</option>
+                                <option value="Pendente de publicação">Pendente de publicação</option>
+                                <option value="Publicada">Publicada</option>
+                            </select>
+                        </div>
+                        <div>
+                            <button id="btn-limpar-filtros" class="button small"
+                                style="height: 2.75rem; line-height: 2.75rem; margin: 0; width: 100%;">Limpar
+                                Filtros</button>
+                        </div>
+                    </div>
+                </section>
+
+                <section>
+                    <div id="area-de-alertas"
+                        style="display: flex; flex-direction: column; margin-top: 2rem; gap: 1rem;"></div>
+                </section>
+            </article>
+
+            <article id="sec-indicadores" class="content-section">
+                <header class="major">
+                    <h2>Indicadores & Metas</h2>
+                </header>
+
+                <div style="position: relative; width: 100%; padding-top: 56.25%; margin-bottom: 30px;">
+                    <iframe id="iframe-looker" src=""
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+
+                <div class="admin-area" style="background: #000000; padding: 15px; border-radius: 8px;">
+                    <h4>⚙️ Atualizar Link do Dashboard</h4>
+                    <p style="font-size: 0.85em; color: #666;">Cole aqui o link de <strong>Incorporação (Embed)</strong>
+                        gerado no Looker Studio.</p>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" class="ls-link-input" placeholder="Cole seu link aqui...">
+                        <button type="button" onclick="salvarNovoLinkLooker()" class="button primary">Atualizar Dash</button>
+                    </div>
+                </div>
+            </article>
+
+        </div>
+    </div>
+
+    <div id="modal-editar"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; align-items: center; justify-content: center;">
+        <div
+            style="background: #272833; padding: 2rem; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <h3>Editar Documento Normativo</h3>
+
+            <form id="form-edit-doc">
+                <input type="hidden" id="edit-id" />
+
+                <div class="fields">
+                    <div class="field half"><label>Nome do Documento</label><input type="text" id="edit-nome"
+                            required /></div>
+                    <div class="field half"><label>URL / Link</label><input type="url" id="edit-link" /></div>
+                    <div class="field half"><label>Tipo</label><input type="text" id="edit-tipo" required /></div>
+                    <div class="field half"><label>Área Responsável</label><input type="text" id="edit-area" required />
+                    </div>
+                    <div class="field half"><label>Data de Validade</label><input type="text" id="edit-data"
+                            class="flatpickr-date" required /></div>
+                    <div class="field half">
+                        <label>Status</label>
+                        <select id="edit-status" required>
+                            <option value="Elaboração">Elaboração</option>
+                            <option value="Aguardando aprovação">Aguardando aprovação</option>
+                            <option value="Pendente de publicação">Pendente de publicação</option>
+                            <option value="Publicada">Publicada</option>
+                        </select>
+                    </div>
+
+                    <div class="field" style="width: 100%;">
+                        <label>Substituir Arquivo / Nova Versão (Opcional)</label>
+                        <ul class="actions" style="margin: 0; display: flex; align-items: center; gap: 1rem;">
+                            <li>
+                                <label for="edit-arquivo" class="button primary small icon solid fa-upload"
+                                    style="margin: 0; cursor: pointer;">
+                                    Substituir Arquivo
+                                </label>
+                                <input type="file" id="edit-arquivo" accept=".pdf,.doc,.docx" style="display: none;" />
+                            </li>
+                            <li>
+                                <span id="edit-arquivo-nome-display"
+                                    style="font-size: 0.9em; opacity: 0.7; font-weight: bold;">
+                                    Nenhum arquivo selecionado
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+
+                </div>
+
+                <ul class="actions" style="margin-top: 1.5rem;">
+                    <li><button type="submit" class="button primary" id="btn-salvar-edicao">Salvar Alterações</button>
+                    </li>
+                    <li><button type="button" id="btn-fechar-modal" class="button">Cancelar</button></li>
+                </ul>
+            </form>
+        </div>
+    </div>
+
+    <script src="/assets/js/jquery.min.js"></script>
+    <script src="/assets/js/browser.min.js"></script>
+    <script src="/assets/js/breakpoints.min.js"></script>
+    <script src="/assets/js/util.js"></script>
+    <script src="/assets/js/main.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+
+    <script src="/src/components/page_painel_governanca/js/sub tasks/componente_docs_alertas.js"></script>
+    <script src="/src/components/page_painel_governanca/js/sub tasks/componente_looker_studio.js"></script>
+
+    <script src="/src/components/page_painel_governanca/js/main_componentes.js"></script>
+
+</body>
+
+</html>

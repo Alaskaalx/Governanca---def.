@@ -1,0 +1,84 @@
+            /* 1. Estrutura do Layout Dividido */
+            body {
+                margin: 0;
+                overflow-x: hidden;
+            }
+
+            #layout-container {
+                display: flex;
+                min-height: 100vh;
+                width: 100%;
+            }
+
+            /* 2. Barra Lateral (Sidebar) */
+            #sidebar {
+                width: 280px;
+                background-color: rgba(0, 0, 0, 0.2);
+                border-right: solid 1px rgba(255, 255, 255, 0.15);
+                padding: 2rem 1.5rem;
+                display: flex;
+                flex-direction: column;
+            }
+
+            #sidebar h3 {
+                margin-bottom: 2rem;
+                color: #fff;
+                font-size: 1.2em;
+                border-bottom: solid 2px rgba(255, 255, 255, 0.1);
+                padding-bottom: 0.5rem;
+            }
+
+            #sidebar ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                flex-grow: 1;
+            }
+
+            #sidebar .menu-link {
+                display: block;
+                padding: 12px 15px;
+                color: rgba(255, 255, 255, 0.6);
+                text-decoration: none;
+                border-bottom: solid 1px rgba(255, 255, 255, 0.05);
+                border-radius: 4px;
+                transition: color 0.2s, background-color 0.2s;
+                margin-bottom: 5px;
+                cursor: pointer;
+            }
+
+            #sidebar .menu-link:hover, 
+            #sidebar .menu-link.active {
+                color: #fff;
+                background-color: rgba(255, 255, 255, 0.1);
+                font-weight: bold;
+            }
+
+            /* 3. Área Principal de Conteúdo */
+            #main-content {
+                flex: 1;
+                padding: 3rem;
+                overflow-y: auto;
+                background: rgba(255, 255, 255, 0.02);
+            }
+
+            #main-content article {
+                width: 100%;
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+
+            /* 4. Lógica de Ocultar/Mostrar as Seções */
+            .content-section {
+                display: none; /* Esconde todas as seções por padrão */
+                animation: fadeIn 0.4s ease-in-out;
+            }
+
+            .content-section.active-section {
+                display: block; /* Mostra apenas a que tiver a classe ativa */
+            }
+
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
+            }

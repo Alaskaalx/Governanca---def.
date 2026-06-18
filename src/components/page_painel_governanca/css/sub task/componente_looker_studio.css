@@ -1,0 +1,122 @@
+/* ==========================================================================
+   LOOKER STUDIO - ESTILOS DO COMPONENTE
+   ========================================================================== */
+
+/* 1. Sub-task: Container Global e Fundo */
+.ls-canvas-container {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    font-family: 'Roboto', Arial, sans-serif;
+}
+
+/* 2. Sub-task: Cabeçalho e Títulos */
+.ls-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333333;
+    margin-bottom: 12px;
+}
+
+/* 3. Sub-task: Scorecards (Métricas de Destaque) */
+.ls-scorecard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ls-metric-value {
+    font-size: 32px;
+    font-weight: bold;
+    color: #1A73E8; /* Azul padrão Google */
+}
+
+.ls-metric-label {
+    font-size: 14px;
+    color: #666666;
+    text-transform: uppercase;
+}
+
+/* 4. Sub-task: Tabelas e Grids */
+.ls-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.ls-table-header th {
+    background-color: #F8F9FA;
+    color: #202124;
+    padding: 12px;
+    text-align: left;
+    border-bottom: 2px solid #DADCE0;
+}
+
+.ls-table-row td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #E8EAED;
+    color: #3C4043;
+}
+
+.ls-table-row:hover {
+    background-color: #F1F3F4;
+}
+
+/* 5. Sub-task: Tooltips (Interação) */
+.ls-tooltip-container {
+    background-color: rgba(0, 0, 0, 0.8);
+    color: #ffffff;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 12px;
+    pointer-events: none; /* Evita bugar o mouseover do gráfico */
+}
+
+/* ==========================================================================
+   6. Sub-task: Campos de Preenchimento (Inputs / Links)
+   ========================================================================== */
+
+.ls-link-input {
+    background-color: #000000 !important; /* Testando o fundo preto */
+    color: #ffffff !important; /* Mudei para branco, senão texto preto no fundo preto some */
+    
+    /* REMOVE O ESTILO NATIVO DO NAVEGADOR */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none; 
+    
+    width: 100%;
+    max-width: 400px;
+    padding: 10px 14px;
+    border: 1px solid #DADCE0;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: 'Roboto', Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+/* Ajusta a cor do texto de placeholder (ex: "Cole seu link aqui...") */
+.ls-link-input::placeholder {
+    color: #80868B !important; 
+    opacity: 1;
+}
+
+/* Estado visual quando o usuário clica para digitar (Foco) */
+.ls-link-input:focus {
+    outline: none;
+    border-color: #1A73E8; /* Azul padrão do Google ao focar */
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+/* (Opcional) Tratamento automático para Relatórios em Modo Escuro */
+@media (prefers-color-scheme: dark) {
+    .ls-link-input {
+        background-color: #303134 !important; /* Fundo escuro */
+        color: #E8EAED !important; /* Texto claro */
+        border-color: #5F6368;
+    }
+
+    .ls-link-input::placeholder {
+        color: #9AA0A6 !important;
+    }
+}
