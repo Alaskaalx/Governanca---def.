@@ -17,12 +17,13 @@
             transform: translateY(0) !important; 
             margin-top: 0 !important;
         }
+        /* O formulário de nova senha começa escondido */
+        #form-nova-senha { display: none; }
     </style>
 </head>
 <body class="is-preload">
 
     <div id="wrapper">
-
         <header id="header">
             <div class="logo">
                 <span class="icon fa-gem"></span>
@@ -30,36 +31,54 @@
         </header>
 
         <div id="main">
-
             <article id="login-form">
-                <h2 class="major" id="titulo-login">Login Gestão de Medidas</h2>
+                
+                <div id="area-login">
+                    <h2 class="major" id="titulo-login">Login Gestão de Medidas</h2>
+                    <form id="form-auth">
+                        <div class="fields">
+                            <div class="field">
+                                <label for="username">Usuário:</label>
+                                <input type="text" id="username" name="username" required />
+                            </div>
+                            <div class="field">
+                                <label for="password">Senha:</label>
+                                <input type="password" id="password" name="password" required />
+                            </div>
+                        </div>
+                        <ul class="actions">
+                            <li><button type="submit" id="btn-login" class="primary">Entrar</button></li>
+                            <li><a href="/index.html#navegar" class="button">Voltar</a></li>
+                        </ul>
+                    </form>
+                </div>
 
-                <form id="form-auth">
-                    <div class="fields">
-                        <div class="field">
-                            <label for="username">Usuário:</label>
-                            <input type="text" id="username" name="username" required />
+                <div id="area-nova-senha" style="display: none;">
+                    <h2 class="major" style="color: #ffcc00;">Primeiro Acesso</h2>
+                    <p>Por questões de segurança, você precisa criar uma nova senha pessoal.</p>
+                    <form id="form-nova-senha">
+                        <div class="fields">
+                            <div class="field">
+                                <label for="nova_senha">Digite a sua Nova Senha:</label>
+                                <input type="password" id="nova_senha" required />
+                            </div>
+                            <div class="field">
+                                <label for="confirma_senha">Confirme a Nova Senha:</label>
+                                <input type="password" id="confirma_senha" required />
+                            </div>
                         </div>
-                        <div class="field">
-                            <label for="password">Senha:</label>
-                            <input type="password" id="password" name="password" required />
-                        </div>
-                    </div>
-                    
-                    <ul class="actions">
-                        <li><button type="submit" id="btn-login" class="primary">Entrar</button></li>
-                        <li><a href="/index.html#navegar" class="button">Voltar</a></li>
-                    </ul>
-                </form>
+                        <ul class="actions">
+                            <li><button type="submit" id="btn-salvar-senha" class="primary">Salvar Nova Senha</button></li>
+                        </ul>
+                    </form>
+                </div>
 
             </article>
-
         </div>
 
         <footer id="footer">
-            <p class="copyright">&copy; Seu Sistema. Design base: <a href="https://html5up.net">HTML5 UP</a>.</p>
+            <p class="copyright">&copy; Seu Sistema.</p>
         </footer>
-
     </div>
 
     <div id="bg"></div>
@@ -70,54 +89,73 @@
     <script src="/assets/js/util.js"></script>
     <script src="/assets/js/main.js"></script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const formAuth = document.getElementById('form-auth');
-            const btnLogin = document.getElementById('btn-login');
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- CORREÇÃO DO SOFT LOCK  ---
+        const divClose = document.querySelector('.close');
+        if (divClose) {
+            divClose.addEventListener('click', function() {
+                window.location.href = '/index.html#navegar'; 
+            });
+        }
 
-            if(formAuth) {
-                formAuth.addEventListener('submit', async function(event) {
-                    event.preventDefault(); // Impede a página de recarregar
+        const formAuth = document.getElementById('form-auth');
+        const btnLogin = document.getElementById('btn-login');
 
-                    btnLogin.innerText = "Validando...";
-                    btnLogin.disabled = true;
+        // --- LÓGICA DO FORMULÁRIO DE LOGIN ---
+        if(formAuth) {
+            formAuth.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                
+                btnLogin.innerText = "A validar acesso...";
+                btnLogin.disabled = true;
 
-                    // Pega o que o usuário digitou
-                    const username = document.getElementById('username').value;
-                    const password = document.getElementById('password').value;
+                const usernameVal = document.getElementById('username').value.trim();
+                const passwordVal = document.getElementById('password').value;
 
-                    try {
-                        // Bate na porta do nosso servidor Node.js
-                        const response = await fetch('/api/auth/login', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            // AQUI ESTÁ A MÁGICA: Adicionamos o modulo_id: 5
-                            body: JSON.stringify({ username: username, password: password, modulo_id: 5 })
-                        });
+                try {
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            username: usernameVal, 
+                            password: passwordVal, 
+                            modulo_id: 5 // Identifica a tabela login_gestao_medidas
+                        })
+                    });
 
-                        const result = await response.json();
+                    const result = await response.json();
 
-                        // Se o Node.js disser que a senha está certa...
-                        if (response.ok && result.sucesso) {
-                            btnLogin.innerText = "Entrando...";
-                            // O backend já nos devolve a url_destino correta!
-                            window.location.href = "/pages/" + result.url_destino; 
+                    if (response.ok && result.sucesso) {
+                        btnLogin.innerText = "Bem-vindo(a)!";
+                        
+                        // Verifica se o controller.js exigiu a criação de uma nova senha (primeiro acesso)
+                        if (result.primeiro_acesso) {
+                            alert("Identificamos o seu primeiro acesso. É necessário cadastrar uma senha definitiva.");
+                            // Redirecione para a sua tela de redefinição de senha aqui
+                            window.location.href = "/caminho_para_criar_senha.html?tabela=" + result.tabela_alvo; 
                         } else {
-                            // Se a senha estiver errada, avisa na tela
-                            alert("Acesso negado: " + (result.mensagem || "Usuário ou senha incorretos."));
-                            btnLogin.innerText = "Entrar";
-                            btnLogin.disabled = false;
+                            // Caminho ajustado. Dependendo de como o seu servidor NodeJS/Express 
+                            // serve as pastas estáticas, o caminho exato pode variar. 
+                            // O padrão baseado na sua estrutura é:
+                            window.location.href = "/src/components/page_painel_gestao_medidas/" + result.url_destino; 
                         }
-                    } catch (error) {
-                        console.error("Erro de conexão:", error);
-                        alert("Erro ao conectar com o servidor Node.js. Verifique se ele está rodando!");
+                    } else {
+                        // Erro de senha ou usuário sem acesso no banco
+                        alert("Acesso negado: " + (result.mensagem || "Credenciais incorretas."));
                         btnLogin.innerText = "Entrar";
                         btnLogin.disabled = false;
                     }
-                });
-            }
-        });
-    </script>
+                } catch (error) {
+                    console.error("Erro:", error);
+                    alert("Erro de conexão ao tentar validar o acesso.");
+                    btnLogin.innerText = "Entrar";
+                    btnLogin.disabled = false;
+                }
+            });
+        }
+    });
+</script>
 
 </body>
 </html>
