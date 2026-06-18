@@ -1,11 +1,26 @@
+/*import mysql from 'mysql2/promise';
+
+const pool = mysql.createPool({
+    host: '127.0.0.1', // <-- OBRIGATÓRIO: Mude para 127.0.0.1
+    user: 'root',
+    password: 'N0$f3r4tu@2001', // <-- Coloque a sua senha real e sem acentos do Workbench
+    database: 'gov_corp', // <-- O banco de dados que criámos
+    port: 3306,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+
+export default pool;*/
+
 import mysql from 'mysql2/promise';
 
-// Cria um "pool" de conexões, que é mais eficiente que abrir e fechar a conexão toda hora
 const pool = mysql.createPool({
-    host: 'localhost',
+    host: '127.0.0.1',           
     user: 'root',
-    password: 'G0v3rn4nc453rv3r2001', // <-- Coloque a senha do MySQL Workbench aqui
-    database: 'gov_corp',
+    password: 'N0$f3r4tu@2001', 
+    database: 'gov_corp_senhas_db', 
+    port: 3306,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0

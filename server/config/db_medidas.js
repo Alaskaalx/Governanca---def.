@@ -1,11 +1,26 @@
+/*import mysql from 'mysql2/promise';
+
+const pool = mysql.createPool({
+    host: '127.0.0.1',
+    user: 'root',
+    password: 'N0$f3r4tu@2001',
+    database: 'gov_corp_senhas_db',
+    port: 3306,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
+
+export default pool;*/
+
 import mysql from 'mysql2/promise';
 
 const db = mysql.createPool({
-    host: '127.0.0.1', // <-- Mude de localhost para 127.0.0.1
+    host: '127.0.0.1',             
     user: 'root',
-    password: 'G0v3rn4nc453rv3r2001', // <-- A sua senha do Workbench
-    database: 'gov_corp',
-    port: 3306,
+    password: 'N0$f3r4tu@2001',
+    database: 'gov_corp_pages_gm_db', 
+    port: 3306,                     
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
