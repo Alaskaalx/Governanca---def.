@@ -1,4 +1,5 @@
-<?php require_once('../api/auth_check.php'); ?> <!DOCTYPE HTML>
+<?php require_once('../api/auth_check.php'); ?>
+<!DOCTYPE HTML>
 <html lang="pt-BR">
 <head>
     <meta charset="utf-8" />
@@ -75,28 +76,58 @@
             const formAuth = document.getElementById('form-auth');
             const btnLogin = document.getElementById('btn-login');
 
+            // --- LÓGICA DO FORMULÁRIO DE LOGIN API/LDAP ---
             if(formAuth) {
-                formAuth.addEventListener('submit', function(event) {
-                    // Impede o formulário de recarregar a página (comportamento padrão)
+                formAuth.addEventListener('submit', async function(event) {
                     event.preventDefault();
+                    
+                    btnLogin.innerText = "A validar acesso...";
+                    btnLogin.disabled = true;
 
-                    // Muda o texto do botão para dar um feedback visual de carregamento
-                    btnLogin.innerText = "Entrando...";
-                    btnLogin.style.opacity = "0.7";
+                    const usernameVal = document.getElementById('username').value.trim();
+                    const passwordVal = document.getElementById('password').value;
 
-                    // Aqui você colocaria a lógica real (API, banco de dados, etc)
-                    // Vamos simular um tempinho de carregamento (1 segundo) e redirecionar
-                    setTimeout(function() {
-                        // MUDE AQUI PARA O NOME DA SUA PÁGINA PÓS-LOGIN CORRESPONDENTE
-                        window.location.href = "governanca.html"; 
-                    }, 1000);
+                    try {
+                        const response = await fetch('/api/auth/login', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                username: usernameVal, 
+                                password: passwordVal, 
+                                modulo_id: 1 // 🔥 Identifica a tabela 'login_compliance' (Governança)
+                            })
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok && result.sucesso) {
+                            btnLogin.innerText = "Bem-vindo(a)!";
+                            
+                            // Verifica se o controller.js exigiu a criação de uma nova senha (primeiro acesso)
+                            if (result.primeiro_acesso) {
+                                alert("Identificamos o seu primeiro acesso. É necessário cadastrar uma senha definitiva.");
+                                // Redirecione para a sua tela de redefinição de senha
+                                window.location.href = "/caminho_para_criar_senha.html?tabela=" + result.tabela_alvo; 
+                            } else {
+                                // Redireciona para o Painel de Governança
+                                window.location.href = "/src/components/page_painel_governanca/" + result.url_destino; 
+                            }
+                        } else {
+                            // Erro de senha ou usuário sem acesso no banco
+                            alert("Acesso negado: " + (result.mensagem || "Credenciais incorretas."));
+                            btnLogin.innerText = "Entrar";
+                            btnLogin.disabled = false;
+                        }
+                    } catch (error) {
+                        console.error("Erro:", error);
+                        alert("Erro de conexão ao tentar validar o acesso.");
+                        btnLogin.innerText = "Entrar";
+                        btnLogin.disabled = false;
+                    }
                 });
             }
         });
     </script>
-
-</body>
-</html>
 
 </body>
 </html>
