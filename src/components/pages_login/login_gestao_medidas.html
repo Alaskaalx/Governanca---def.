@@ -1,0 +1,161 @@
+<!DOCTYPE HTML>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <title>Login Gestão de Medidas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    
+    <link rel="stylesheet" href="/assets/css/main.css" />
+    <noscript><link rel="stylesheet" href="/assets/css/noscript.css" /></noscript>
+    
+    <style>
+        #header { margin-top: 2rem; }
+        #main { display: flex !important; align-items: center; justify-content: center; }
+        #main article { 
+            display: block !important; 
+            opacity: 1 !important; 
+            transform: translateY(0) !important; 
+            margin-top: 0 !important;
+        }
+        /* O formulário de nova senha começa escondido */
+        #form-nova-senha { display: none; }
+    </style>
+</head>
+<body class="is-preload">
+
+    <div id="wrapper">
+        <header id="header">
+            <div class="logo">
+                <span class="icon fa-gem"></span>
+            </div>
+        </header>
+
+        <div id="main">
+            <article id="login-form">
+                
+                <div id="area-login">
+                    <h2 class="major" id="titulo-login">Login Gestão de Medidas</h2>
+                    <form id="form-auth">
+                        <div class="fields">
+                            <div class="field">
+                                <label for="username">Usuário:</label>
+                                <input type="text" id="username" name="username" required />
+                            </div>
+                            <div class="field">
+                                <label for="password">Senha:</label>
+                                <input type="password" id="password" name="password" required />
+                            </div>
+                        </div>
+                        <ul class="actions">
+                            <li><button type="submit" id="btn-login" class="primary">Entrar</button></li>
+                            <li><a href="/index.html#navegar" class="button">Voltar</a></li>
+                        </ul>
+                    </form>
+                </div>
+
+                <div id="area-nova-senha" style="display: none;">
+                    <h2 class="major" style="color: #ffcc00;">Primeiro Acesso</h2>
+                    <p>Por questões de segurança, você precisa criar uma nova senha pessoal.</p>
+                    <form id="form-nova-senha">
+                        <div class="fields">
+                            <div class="field">
+                                <label for="nova_senha">Digite a sua Nova Senha:</label>
+                                <input type="password" id="nova_senha" required />
+                            </div>
+                            <div class="field">
+                                <label for="confirma_senha">Confirme a Nova Senha:</label>
+                                <input type="password" id="confirma_senha" required />
+                            </div>
+                        </div>
+                        <ul class="actions">
+                            <li><button type="submit" id="btn-salvar-senha" class="primary">Salvar Nova Senha</button></li>
+                        </ul>
+                    </form>
+                </div>
+
+            </article>
+        </div>
+
+        <footer id="footer">
+            <p class="copyright">&copy; Seu Sistema.</p>
+        </footer>
+    </div>
+
+    <div id="bg"></div>
+
+    <script src="/assets/js/jquery.min.js"></script>
+    <script src="/assets/js/browser.min.js"></script>
+    <script src="/assets/js/breakpoints.min.js"></script>
+    <script src="/assets/js/util.js"></script>
+    <script src="/assets/js/main.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- CORREÇÃO DO SOFT LOCK  ---
+        const divClose = document.querySelector('.close');
+        if (divClose) {
+            divClose.addEventListener('click', function() {
+                window.location.href = '/index.html#navegar'; 
+            });
+        }
+
+        const formAuth = document.getElementById('form-auth');
+        const btnLogin = document.getElementById('btn-login');
+
+        // --- LÓGICA DO FORMULÁRIO DE LOGIN ---
+        if(formAuth) {
+            formAuth.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                
+                btnLogin.innerText = "A validar acesso...";
+                btnLogin.disabled = true;
+
+                const usernameVal = document.getElementById('username').value.trim();
+                const passwordVal = document.getElementById('password').value;
+
+                try {
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            username: usernameVal, 
+                            password: passwordVal, 
+                            modulo_id: 5 // Identifica a tabela login_gestao_medidas
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.sucesso) {
+                        btnLogin.innerText = "Bem-vindo(a)!";
+                        
+                        // Verifica se o controller.js exigiu a criação de uma nova senha (primeiro acesso)
+                        if (result.primeiro_acesso) {
+                            alert("Identificamos o seu primeiro acesso. É necessário cadastrar uma senha definitiva.");
+                            // Redirecione para a sua tela de redefinição de senha aqui
+                            window.location.href = "/caminho_para_criar_senha.html?tabela=" + result.tabela_alvo; 
+                        } else {
+                            // Caminho ajustado. Dependendo de como o seu servidor NodeJS/Express 
+                            // serve as pastas estáticas, o caminho exato pode variar. 
+                            // O padrão baseado na sua estrutura é:
+                            window.location.href = "/src/components/page_painel_gestao_medidas/" + result.url_destino; 
+                        }
+                    } else {
+                        // Erro de senha ou usuário sem acesso no banco
+                        alert("Acesso negado: " + (result.mensagem || "Credenciais incorretas."));
+                        btnLogin.innerText = "Entrar";
+                        btnLogin.disabled = false;
+                    }
+                } catch (error) {
+                    console.error("Erro:", error);
+                    alert("Erro de conexão ao tentar validar o acesso.");
+                    btnLogin.innerText = "Entrar";
+                    btnLogin.disabled = false;
+                }
+            });
+        }
+    });
+</script>
+
+</body>
+</html>
