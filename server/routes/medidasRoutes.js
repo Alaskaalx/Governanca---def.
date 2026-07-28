@@ -1,7 +1,5 @@
-// routes/medidasRoutes.js
 import express from 'express';
-import db from '../config/db_medidas.js'; // Importa o pool específico para o banco de medidas
-
+import db from '../config/db_medidas.js'; 
 import multer from 'multer';
 import xlsx from 'xlsx';
 
@@ -9,7 +7,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 const router = express.Router();
 
 // ============================================================================
-// 1. ROTA: BUSCAR ATOS FALTOSOS E REGRAS (Alimenta o <select> do formulário)
+// 1. ROTA: BUSCAR ATOS FALTOSOS E REGRAS
 // ============================================================================
 router.get('/atos-faltosos', async (req, res) => {
     try {
@@ -21,124 +19,167 @@ router.get('/atos-faltosos', async (req, res) => {
     }
 });
 
-
 // ============================================================================
-// 2. ROTA: AUTOPREENCHIMENTO DO COLABORADOR (Busca pelo número da Matrícula)
+// 2. ROTA: AUTOPREENCHIMENTO DO COLABORADOR (Sem Criptografia e Nomes Corrigidos)
 // ============================================================================
 router.get('/colaborador/:matricula', async (req, res) => {
     try {
-        const { matricula } = req.params;
+        const matriculaOriginal = req.params.matricula.trim();
+        const matriculaLimpa = matriculaOriginal.replace(/^0+/, ''); // Tira zeros à esquerda
 
-        // ETAPA 1: Busca na tabela de Histórico primeiro
-        const queryHistorico = 'SELECT * FROM base_colaboradores_historico WHERE matricula = ? ORDER BY id DESC LIMIT 1';
-        const [resultadoHistorico] = await db.query(queryHistorico, [matricula]);
+        // 🔥 CORREÇÃO DEFINITIVA: Trocado de \`SITUAÇAO\` para SITUACAO (sem acentos)
+        const queryHistorico = `
+            SELECT 
+                MATRICULA AS matricula, 
+                NOME AS nome, 
+                NOME_FILIAL AS filial, 
+                DATA_ADMISSAO AS admissao, 
+                SITUACAO AS situacao 
+            FROM base_colaboradores_historico 
+            WHERE TRIM(LEADING '0' FROM MATRICULA) = ? 
+            ORDER BY id DESC LIMIT 1
+        `;
+        const [resultadoHistorico] = await db.query(queryHistorico, [matriculaLimpa]);
+
+        let h = null;
+        let nomeEncontradoHistorico = '';
 
         if (resultadoHistorico.length > 0) {
-            console.log(`✅ Colaborador ${matricula} encontrado no Histórico.`);
+            h = resultadoHistorico[0]; 
             
-            const h = resultadoHistorico[0];
-            
-            // Formatamos os dados para que o Frontend entenda independentemente de onde veio
-            const dadosHistorico = {
-                matricula: h.matricula,
-                nome: h.nome,
-                gestor_1: h.primeiro_gestor,
-                gestor_2: h.segundo_gestor,
-                gerente: h.gerente,
-                diretor: h.diretor_superintendente, // Pode não existir no histórico, mas colocamos para garantir
-                filial: h.filial,
-                admissao: h.data_admissao
-            };
-            
-            return res.json({ sucesso: true, origem: 'historico', dados: dadosHistorico });
+            const linhaComNome = resultadoHistorico.find(linha => 
+                linha.nome && 
+                linha.nome.trim() !== '' && 
+                String(linha.nome).toLowerCase() !== 'none' && 
+                String(linha.nome).toLowerCase() !== 'nan'
+            );
+            if (linhaComNome) {
+                nomeEncontradoHistorico = linhaComNome.nome.trim();
+            }
         }
-        
-        console.log(`⚠️ Matrícula ${matricula} não está no histórico. Buscando na Base Geral...`);
 
-        // ETAPA 2: Se não achou, busca no Cadastro Geral
-        const queryCadastro = 'SELECT * FROM cadastro_colaborador WHERE matricula_re = ? LIMIT 1';
-        const [resultadoCadastro] = await db.query(queryCadastro, [matricula]);
+        // Busca no Cadastro usando as colunas exatas da sua tabela (StatusOficial)
+        const queryCadastro = `
+            SELECT 
+                MatriculaRE AS matricula, 
+                NomeColaborador AS nome, 
+                PrimeiroGestor AS gestor_1, 
+                SegundoGestor AS gestor_2, 
+                Gerente AS gerente, 
+                DiretorSuperintendente AS diretor, 
+                DataAdmissao AS admissao, 
+                StatusOficial AS filial 
+            FROM cadastro_colaborador 
+            WHERE TRIM(LEADING '0' FROM MatriculaRE) = ? 
+            LIMIT 1
+        `;
+        const [resultadoCadastro] = await db.query(queryCadastro, [matriculaLimpa]);
+        const c = resultadoCadastro.length > 0 ? resultadoCadastro[0] : null;
 
-        if (resultadoCadastro.length > 0) {
-            const c = resultadoCadastro[0];
-
-            const dadosCadastro = {
-                matricula: c.matricula_re,
-                nome: c.nome_colaborador,
-                gestor_1: c.primeiro_gestor,
-                gestor_2: c.segundo_gestor,
-                gerente: c.gerente,
-                diretor: c.diretor_superintendente,
-                filial: c.operacao,
-                admissao: '' // Como o cadastro RH não tem admissão, enviamos vazio
-            };
-
-            console.log(`✅ Colaborador ${matricula} encontrado no Cadastro Geral.`);
-            return res.json({ sucesso: true, origem: 'suporte', dados: dadosCadastro });
+        if (!h && !c) {
+            return res.status(404).json({ sucesso: false, mensagem: "Colaborador não localizado em nenhuma das bases." });
         }
-        
-        // ETAPA 3: Se não achou em lugar nenhum
-        res.status(404).json({
-            sucesso: false,
-            mensagem: "Colaborador não localizado em nenhuma das bases."
-        });
+
+        // ===================================================================
+        // Função de limpeza absoluta de strings vazias + Tratamento de Datas
+        // ===================================================================
+        const limparTexto = (texto) => {
+            if (texto === null || texto === undefined || String(texto).toLowerCase() === 'nan' || String(texto).toLowerCase() === 'none') {
+                return '';
+            }
+            
+            if (texto instanceof Date) {
+                const ano = texto.getFullYear();
+                const mes = String(texto.getMonth() + 1).padStart(2, '0');
+                const dia = String(texto.getDate()).padStart(2, '0');
+                return `${ano}-${mes}-${dia}`;
+            }
+
+            return String(texto).trim();
+        };
+
+        // Mesclagem do Nome
+        let nomeDefinitivo = limparTexto(nomeEncontradoHistorico);
+        if (!nomeDefinitivo && c) {
+            nomeDefinitivo = limparTexto(c.nome);
+        }
+
+        // Monta o pacote EXATO que o HTML está esperando receber
+        const dadosCadastro = {
+            matricula: matriculaOriginal,
+            nome: nomeDefinitivo,
+            gestor_1: c ? limparTexto(c.gestor_1) : '',
+            gestor_2: c ? limparTexto(c.gestor_2) : '',
+            gerente:  c ? limparTexto(c.gerente) : '',
+            diretor:  c ? limparTexto(c.diretor) : '',
+            filial:   c ? limparTexto(c.filial) : (h ? limparTexto(h.filial) : ''),
+            admissao: c ? limparTexto(c.admissao) : (h ? limparTexto(h.admissao) : ''),
+            situacao: h ? (limparTexto(h.situacao) || 'A') : 'A'
+        };
+
+        return res.json({ sucesso: true, dados: dadosCadastro });
 
     } catch (error) {
-        console.error("❌ Erro ao buscar colaborador:", error);
-        res.status(500).json({ sucesso: false, mensagem: "Erro no servidor ao buscar colaborador." });
+        console.error("❌ Erro na rota colaborador:", error);
+        res.status(500).json({ sucesso: false, mensagem: "Erro SQL Colaborador: " + error.message });
     }
 });
 
-
 // ============================================================================
-// 3. ROTA: DASHBOARD / HISTÓRICO (Traz todo o histórico e puxa a operação)
+// 3. ROTA: DASHBOARD / HISTÓRICO (Alimenta a Tabela do HTML)
 // ============================================================================
 router.get('/lista', async (req, res) => {
     try {
-        const { matricula } = req.query;
-
-        if (!matricula) {
+        if (!req.query.matricula) {
             return res.json([]); 
         }
 
-        // A MÁGICA: O comando ORDER BY com CASE força a progressão lógica.
-        // O desempate (caso haja iguais) é feito pela validade_medida.
+        const matriculaLimpa = req.query.matricula.trim().replace(/\s/g, '').replace(/^0+/, '');
+
+        // Consulta direta em texto limpo com os nomes reais das colunas
         const query = `
             SELECT 
-                h.matricula,
-                h.nome,
-                h.data_ato_faltoso,
-                h.validade_medida,
-                h.nome_ocorrencia AS tipo_medida,
-                h.desc_ato_faltoso,
-                h.tipo_gravidade AS gravidade,
-                c.operacao AS cliente
-            FROM base_colaboradores_historico h
-            LEFT JOIN cadastro_colaborador c ON h.matricula = c.matricula_re
-            WHERE h.matricula = ?
-            ORDER BY 
-                CASE 
-                    WHEN h.nome_ocorrencia LIKE '%1ª%' THEN 1
-                    WHEN h.nome_ocorrencia LIKE '%2ª%' THEN 2
-                    WHEN h.nome_ocorrencia LIKE '%3ª%' THEN 3
-                    WHEN h.nome_ocorrencia LIKE '%SUSPENSÃO%' THEN 4
-                    WHEN h.nome_ocorrencia LIKE '%JUSTA CAUSA%' THEN 5
-                    WHEN h.nome_ocorrencia LIKE '%DEMISSÃO%' THEN 6
-                    ELSE 99 
-                END ASC,
-                h.validade_medida DESC,
-                h.data_ato_faltoso DESC
+                MATRICULA AS matricula,
+                NOME AS nome,
+                OBSERVACAO AS observacao,
+                DATA_ATO_FALTOSO AS data_ato_faltoso,
+                DATA_INICIO_SUSPENSAO AS data_suspensao,
+                TIPO_GRAVIDADE AS gravidade,
+                DESCRICAO_TIPO_MEDIDA AS tipo_medida,
+                COD_TIPO_MEDIDA AS codigo_progressao
+            FROM base_colaboradores_historico 
+            WHERE TRIM(LEADING '0' FROM MATRICULA) = ?
+            ORDER BY id DESC
         `;
         
-        const [linhas] = await db.query(query, [matricula]);
-        
-        res.json(linhas);
+        const [linhas] = await db.query(query, [matriculaLimpa]);
+
+        const linhasLimpas = linhas.map(linha => {
+            let dataPrimaria = linha.data_ato_faltoso || linha.data_suspensao || new Date().toISOString().split('T')[0];
+
+            return {
+                matricula: linha.matricula || '',
+                nome: linha.nome || '',
+                observacao: linha.observacao || '-',
+                data_ato_faltoso: dataPrimaria,
+                data_suspensao: linha.data_suspensao || '',
+                gravidade: linha.gravidade || '-',
+                tipo_medida: linha.tipo_medida || '',
+                codigo_progressao: linha.codigo_progressao || 0,
+                cliente: 'Não Informado' 
+            };
+        });
+
+        res.json(linhasLimpas);
+
     } catch (error) {
-        console.error("Erro ao buscar histórico de medidas:", error);
-        res.status(500).json({ sucesso: false, mensagem: "Erro ao buscar dados do Dashboard." });
+        console.error("❌ Erro ao buscar histórico de medidas:", error);
+        res.status(500).json({ 
+            sucesso: false, 
+            mensagem: "Erro SQL: " + error.message 
+        });
     }
 });
-
 
 // ============================================================================
 // 4. ROTA: SALVAR NOVA MEDIDA (Insere na tabela Consolidada)
@@ -147,7 +188,6 @@ router.post('/nova', async (req, res) => {
     try {
         const dados = req.body;
 
-        // Query preparada para a tabela massiva consolidada
         const query = `
             INSERT INTO medidas_disciplinares_consolidado 
             (
@@ -164,8 +204,6 @@ router.post('/nova', async (req, res) => {
             )
         `;
         
-        // Mapeamento inteligente: Se o campo não vier do formulário, salva como NULL
-        // Note que ele aceita tanto os nomes antigos do HTML (ex: admissao) quanto os novos (ex: data_admissao)
         const valores = [
             dados.matricula || null,
             dados.cpf || null,
@@ -185,7 +223,7 @@ router.post('/nova', async (req, res) => {
             dados.data_fim_ocorrencia || null,
             dados.validade_medida || null,
             dados.nro_chamado_sagoglobal || null,
-            dados.data_ato_manual || dados.data_ato_faltoso || null, // A data que o gestor escolhe no form
+            dados.data_ato_manual || dados.data_ato_faltoso || null, 
             dados.classificacao_ato_faltoso || null,
             dados.desc_ato_faltoso || null,
             dados.tipo_medida || dados.tipo || null,
@@ -217,23 +255,18 @@ router.post('/importar', upload.single('planilhaExcel'), async (req, res) => {
             return res.status(400).json({ sucesso: false, mensagem: "Nenhum arquivo enviado." });
         }
 
-        // 1. Lê o arquivo Excel da memória
         const workbook = xlsx.read(req.file.buffer, { type: 'buffer' });
         const nomeDaPrimeiraAba = workbook.SheetNames[0];
         const aba = workbook.Sheets[nomeDaPrimeiraAba];
-
-        // 2. Converte as linhas do Excel para um Array de Objetos JavaScript
         const dadosExcel = xlsx.utils.sheet_to_json(aba);
 
         if (dadosExcel.length === 0) {
             return res.status(400).json({ sucesso: false, mensagem: "A planilha está vazia." });
         }
 
-        // 3. Prepara a inserção em massa (Loop)
         let inseridos = 0;
 
         for (const linha of dadosExcel) {
-            // Verifica se a linha tem pelo menos a matrícula (para evitar linhas em branco)
             if (linha.MATRICULA || linha.matricula) {
                 const query = `
                     INSERT INTO medidas_disciplinares_consolidado 
@@ -241,8 +274,6 @@ router.post('/importar', upload.single('planilhaExcel'), async (req, res) => {
                     VALUES (?, ?, ?, ?, ?, ?)
                 `;
                 
-                // Mapeia as colunas do Excel para o Banco. 
-                // ATENÇÃO: O nome da propriedade (ex: linha.NOME) tem que ser EXATAMENTE igual ao cabeçalho da sua planilha Excel.
                 const valores = [
                     linha.MATRICULA || linha.matricula || null,
                     linha.NOME || linha.nome || null,

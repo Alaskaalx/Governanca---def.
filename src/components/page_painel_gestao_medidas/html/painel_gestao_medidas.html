@@ -1,14 +1,17 @@
 <!DOCTYPE HTML>
 <html lang="pt-BR">
+
 <head>
     <meta charset="utf-8" />
     <title>Painel - Gestão de Medidas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-    
+
     <link rel="stylesheet" href="/assets/css/main.css" />
     <link rel="stylesheet" href="/src/components/page_painel_gestao_medidas/css/gestao_medidas.css" />
-    <noscript><link rel="stylesheet" href="/assets/css/noscript.css" /></noscript>
-    
+    <noscript>
+        <link rel="stylesheet" href="/assets/css/noscript.css" />
+    </noscript>
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -17,18 +20,30 @@
     <style>
         /* CSS base para o funcionamento das abas */
         .content-section {
-            display: none !important; /* Esconde todas por padrão */
+            display: none !important;
+            /* Esconde todas por padrão */
             animation: fadeIn 0.4s ease-in-out;
         }
+
         .content-section.active-section {
-            display: block !important; /* Mostra apenas a ativa */
+            display: block !important;
+            /* Mostra apenas a ativa */
         }
+
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
 </head>
+
 <body class="is-preload">
 
     <div id="layout-container">
@@ -48,9 +63,9 @@
                 </li>
             </ul>
             <div style="margin-top: 2rem;">
-                <a href="/index.html#navegar" class="button small fit icon solid fa-arrow-left">Sair do Painel</a>
+                <a href="javascript:void(0)" id="btn-sair" class="button small fit icon solid fa-arrow-left">Sair do Painel</a>
             </div>
-            
+
             <div style="margin-top: auto; padding-top: 2rem; font-size: 0.8em; color: rgba(255,255,255,0.4);">
                 &copy; Gestão de Medidas.<br>
                 Usuário: <strong id="usuario-logado">Carregando...</strong>
@@ -58,7 +73,7 @@
         </nav>
 
         <div id="main-content">
-            
+
             <section id="gestao-form" class="content-section active-section">
                 <header class="major">
                     <h2>Emissão de Medidas Disciplinares</h2>
@@ -66,10 +81,11 @@
                 </header>
 
                 <form id="form-medidas">
-                    <div class="fields">                     
+                    <div class="fields">
                         <div class="field quarter">
-                            <label for="matricula">Matrícula</label>
-                            <input type="text" id="matricula" name="matricula" onblur="buscarDadosColaborador()" />
+                            <label for="matricula">Matrícula *</label>
+                            <input type="text" id="matricula" name="matricula" onblur="buscarDadosColaborador()"
+                                required />
                         </div>
                         <div class="field quarter">
                             <label for="admissao">Admissão</label>
@@ -79,7 +95,7 @@
                             <label for="volume_medidas">Vol. Medidas Recebidas</label>
                             <input type="number" id="volume_medidas" name="volume_medidas" readonly />
                         </div>
-                        
+
                         <div class="field quarter">
                             <label for="grupo">Grupo de Infração *</label>
                             <select id="grupo" name="grupo_id" required onchange="atualizarAtos()">
@@ -90,34 +106,37 @@
                                 <option value="4">QUALIDADE</option>
                             </select>
                         </div>
-                        
+
                         <div class="field half">
                             <label for="ato_faltoso">Ato Faltoso *</label>
                             <select id="ato_faltoso" name="ato_faltoso_id" required onchange="preencherDadosDoAto()">
                                 <option value="">Selecione um grupo primeiro...</option>
                             </select>
                         </div>
-                        
+
                         <div class="field half">
                             <label for="data_ato_manual">Data do Ato Faltoso*</label>
-                            <input type="text" id="data_ato_manual" placeholder="Selecione uma ou mais datas..." required />
+                            <input type="text" id="data_ato_manual" placeholder="Selecione uma ou mais datas..."
+                                required />
                         </div>
 
                         <div class="field half" id="div-data-suspensao" style="display: none;">
                             <label for="data_suspensao" style="color: #ffcc00;">Data Início da Suspensão *</label>
-                            <input type="date" id="data_suspensao" onchange="preencherDadosDoAto()" style="border-color: #ffcc00 !important;" />
+                            <input type="date" id="data_suspensao" onchange="preencherDadosDoAto()"
+                                style="border-color: #ffcc00 !important;" />
                         </div>
-                        
+
                         <div class="field half">
                             <label for="nome">Nome do Colaborador</label>
                             <input type="text" id="nome" name="nome" readonly />
                         </div>
-                        
+
                         <div class="field half">
                             <label for="situacao">Situação</label>
-                            <input type="text" id="situacao" name="situacao" readonly style="font-weight: bold; text-align: center;" />
+                            <input type="text" id="situacao" name="situacao" readonly
+                                style="font-weight: bold; text-align: center;" />
                         </div>
-                        
+
                         <div class="field third">
                             <label for="nova_gravidade">Gravidade</label>
                             <input type="text" id="nova_gravidade" name="nova_gravidade" readonly />
@@ -125,9 +144,10 @@
 
                         <div class="field third">
                             <label for="codigo_progressao">Cód. Progressão</label>
-                            <input type="number" id="codigo_progressao" name="codigo_progressao" readonly style="color: #ffcc00; font-weight: bold;" />
+                            <input type="number" id="codigo_progressao" name="codigo_progressao" readonly
+                                style="color: #ffcc00; font-weight: bold;" />
                         </div>
-                        
+
                         <div class="field third">
                             <label for="proxima_acao">Próxima Ação</label>
                             <input type="text" id="proxima_acao" name="proxima_acao" readonly />
@@ -135,7 +155,7 @@
 
                         <div class="field quarter">
                             <label for="gestor_1">1º Gestor</label>
-                            <input type="text" id="gestor_1" name="gestor_1" readonly/>
+                            <input type="text" id="gestor_1" name="gestor_1" readonly />
                         </div>
 
                         <div class="field quarter">
@@ -155,27 +175,32 @@
 
                         <div class="field" style="width: 100%;">
                             <label for="info_compliance">Informações | Compliance</label>
-                            <textarea id="info_compliance" name="info_compliance" rows="2" readonly>Histórico de medidas contempla apenas as medidas aplicadas nos últimos 12 meses, não correspondendo ao histórico real do colaborador na companhia.</textarea>
+                            <textarea id="info_compliance" name="info_compliance" rows="2"
+                                readonly>Histórico de medidas contempla apenas as medidas aplicadas nos últimos 12 meses, não correspondendo ao histórico real do colaborador na companhia.</textarea>
                         </div>
 
                         <div class="field" style="width: 100%;">
                             <label for="descricao">Corpo da Medida (Texto Oficial) *</label>
-                            <textarea id="descricao" name="texto_gerado" rows="4" placeholder="Preencha o Nome, Data e Ato Faltoso para gerar o texto oficial..." required readonly></textarea>
+                            <textarea id="descricao" name="texto_gerado" rows="4"
+                                placeholder="Preencha o Nome, Data e Ato Faltoso para gerar o texto oficial..." required
+                                readonly></textarea>
                         </div>
 
                     </div>
-                    
+
                     <ul class="actions" style="margin-top: 1.5rem;">
-                        <li><button type="button" class="button primary" onclick="gerarTextoMedida()">Gerar Medida PDF</button></li>
-                        <li><button type="button" class="button" id="btn-quebrar" style="display: none;">Gerar quebra de fluxo</button></li>
+                        <li><button type="button" class="button primary" onclick="gerarTextoMedida()">Gerar Medida
+                                PDF</button></li>
+                        <li><button type="button" class="button" id="btn-quebrar" style="display: none;">Gerar quebra de
+                                fluxo</button></li>
                     </ul>
-                    
+
                     <div id="mensagem-retorno"></div>
                 </form>
 
-                <hr style="margin: 3rem 0;" /> 
+                <hr style="margin: 3rem 0;" />
                 <h3 class="major">Histórico de Medidas Emitidas</h3>
-                
+
                 <div class="table-wrapper historico-container">
                     <table class="alt" id="tabela-historico">
                         <thead>
@@ -183,14 +208,15 @@
                                 <th>Matrícula</th>
                                 <th>Nome</th>
                                 <th>Observações</th>
-                                <th>Validade Medida</th>
+                                <th>Data da Medida</th>
                                 <th>Gravidade</th>
-                                <th>Cliente</th>
+                                <th>Cliente/Filial</th>
                             </tr>
                         </thead>
                         <tbody id="lista-medidas-body">
                             <tr>
-                                <td colspan="8" style="text-align: center; color: rgba(255,255,255,0.5);">Nenhuma medida encontrada ou carregando...</td>
+                                <td colspan="8" style="text-align: center; color: rgba(255,255,255,0.5);">Nenhuma medida
+                                    encontrada ou carregando...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -216,26 +242,26 @@
     <script src="/assets/js/breakpoints.min.js"></script>
     <script src="/assets/js/util.js"></script>
     <script src="/assets/js/main.js"></script>
-    <script src="/src/components/page_painel_gestao_medidas/js/gestao_medidas.js"></script>
+    <script src="/src/components/page_painel_gestao_medidas/js/gestao_medidas.js?v=100"></script>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const menuLinks = document.querySelectorAll('.menu-link');
             const sections = document.querySelectorAll('.content-section');
-            
+
             menuLinks.forEach(link => {
                 link.addEventListener('click', function (e) {
                     e.preventDefault();
-                    
+
                     // 1. Remove a classe active de todos os botões do menu
                     menuLinks.forEach(l => l.classList.remove('active'));
-                    
+
                     // 2. Remove a classe active-section de todas as sessões (esconde tudo)
                     sections.forEach(s => s.classList.remove('active-section'));
-                    
+
                     // 3. Adiciona a classe active no botão clicado
                     this.classList.add('active');
-                    
+
                     // 4. Mostra a sessão correspondente ao botão clicado
                     const targetId = this.getAttribute('data-target');
                     if (targetId) {
@@ -247,4 +273,5 @@
     </script>
 
 </body>
+
 </html>

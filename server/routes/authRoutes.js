@@ -1,25 +1,25 @@
 import express from 'express';
-import { login, alterarSenha } from '../controllers/authController.js'; // 1. Adicione o 'alterarSenha' no import
-import bcrypt from 'bcrypt';
+import { login } from '../controllers/authController.js'; 
 
 const router = express.Router();
 
-// 1. Rota de Login (Recebe os dados do HTML e manda para o seu Controller)
+// 1. Rota Única de Login
 router.post('/login', login);
 
-// NOVA ROTA: Recebe a nova senha do usuário que está no primeiro acesso
-router.post('/alterar-senha', alterarSenha);
-
-// 2. Rota de Verificação de Sessão (Console 100% limpo)
+// 2. Rota de Verificação de Sessão
 router.get('/me', (req, res) => {
-    if (req.session && req.session.usuario) {
-        res.status(200).json({ logado: true, nome: req.session.usuario.nome }); 
+    if (req.session && req.session.usuario_id) {
+        res.status(200).json({ 
+            logado: true, 
+            nome: req.session.usuario_nome,
+            perfil: (req.session.usuario_perfil || 'padrao').toLowerCase() 
+        }); 
     } else {
         res.status(200).json({ logado: false, mensagem: "Nenhum usuário logado." });
     }
 });
 
-// 3. Rota de Logout (Destrói a sessão quando o usuário clicar em Sair)
+// 3. Rota de Logout
 router.post('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
@@ -28,12 +28,6 @@ router.post('/logout', (req, res) => {
         res.clearCookie('connect.sid'); 
         res.json({ sucesso: true, mensagem: "Deslogado com sucesso!" });
     });
-});
-
-// Rota secreta para gerar senhas
-router.get('/gerador', async (req, res) => {
-    const hashNovo = await bcrypt.hash('123456', 10);
-    res.send(`O hash perfeito para 123456 é: <b>${hashNovo}</b>`);
 });
 
 export default router;

@@ -237,10 +237,10 @@ function preencherDadosDoAto() {
         textoIntroducao = `ATENÇÃO: ESTE DOCUMENTO NÃO É VÁLIDO PARA A CONCRETIZAÇÃO DO DESLIGAMENTO!\n\nO colaborador(a) acumulou diversos atos desidiosos, não apresentando evolução na escala pedagógica. Desta forma, orientamos seguir com a abertura de chamado para Justa Causa com as devidas evidências e seu histórico disciplinar, presente neste relatório. Abaixo, segue descrição de novo ato faltoso cometido pelo mesmo, onde na data da ocorrência ${dataFormatada}, apresentou o desvio:`;
     }
 
-    const corpoCompleto = `${textoIntroducao}\n\nGRUPO DE INFRAÇÃO DISCIPLINAR: ${grupoTexto}\n${atoEscolhido.item} - ${atoEscolhido.descricao_ato}\n\nQue diz respeito a:\n${atoEscolhido.descricao_observacao}`;
+    const cuerpoCompleto = `${textoIntroducao}\n\nGRUPO DE INFRAÇÃO DISCIPLINAR: ${grupoTexto}\n${atoEscolhido.item} - ${atoEscolhido.descricao_ato}\n\nQue diz respeito a:\n${atoEscolhido.descricao_observacao}`;
 
     const campoDescricao = document.getElementById('descricao');
-    campoDescricao.value = corpoCompleto;
+    campoDescricao.value = cuerpoCompleto;
     autoResize(campoDescricao);
 }
 
@@ -301,7 +301,7 @@ function gerarTextoMedida() {
                 margin: [0, 4, 0, 4]
             },
             {
-                text: 'VALIDADE',
+                text: 'DATA DA MEDIDA',
                 bold: true,
                 fontSize: 7,
                 fillColor: '#2c3e50',
@@ -575,6 +575,7 @@ function gerarTextoMedida() {
     };
 
     pdfMake.createPdf(docDefinition).download(`Medida_Disciplinar_${matricula}.pdf`);
+    registrarLogAuditoria('PDF_GERADO', `Gerou PDF da medida disciplinar para matrícula ${matricula}`);
 }
 
 // ============================================================================
@@ -652,8 +653,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const divClose = document.querySelector('.close');
     if (divClose) {
         divClose.addEventListener('click', function () {
-            window.location.href = '/index.html#navegar'; // Altere para a rota do seu menu anterior se necessário
+            window.location.href = '/index.html#navegar'; 
         });
+    }
+
+    const btnSair = document.getElementById('btn-sair');
+    if (btnSair) {
+        btnSair.addEventListener('click', encerrarSessaoManual);
     }
 
     // 1. REGRAS DA DATA DO ATO FALTOSO (Flatpickr)
@@ -661,7 +667,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         mode: "multiple",
         dateFormat: "d/m/Y",
         locale: "pt",
-        maxDate: "today", // Bloqueia datas futuras
+        maxDate: "today", 
         onReady: function (selectedDates, dateStr, instance) {
             instance.input.removeAttribute('readonly');
         },
@@ -698,7 +704,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         const userData = await resUser.json();
 
         if (userData.logado) {
-            // Preenche o nome lá no topo da tela com o username
             document.getElementById('usuario-logado').textContent = userData.nome;
 
             // 🔥 SE FOR ADMIN, EXIBE O BOTÃO ESPECIAL DE QUEBRA DE FLUXO
@@ -706,6 +711,15 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const btnQuebrar = document.getElementById('btn-quebrar');
                 if (btnQuebrar) btnQuebrar.style.display = 'inline-block';
             }
+            
+            // 🔥 SE FOR USUÁRIO NORMAL, LIGA O CRONÔMETRO DE AFK (NOVIDADE)
+            if (userData.perfil === 'usuario') {
+                iniciarMonitoramentoAFK();
+            }
+            
+            // Registra no TXT que a pessoa acabou de abrir a tela
+            registrarLogAuditoria('ACESSO_TELA', `Acessou o painel de Gestão de Medidas`);
+
         } else {
             document.getElementById('usuario-logado').textContent = 'Visitante (Não logado)';
         }
@@ -730,18 +744,15 @@ document.addEventListener("DOMContentLoaded", async () => {
                 return;
             }
 
-            // Descobre qual foi o último código aplicado
             let maxCodigo = 0;
             historicoAtualColaborador.forEach(m => {
                 let cod = m.codigo_progressao ? parseInt(m.codigo_progressao) : getCodigoDaMedida(m.tipo_medida);
                 if (cod > maxCodigo) maxCodigo = cod;
             });
 
-            // Define o próximo código igual ao anterior (Exceção à Regra)
             let proximoCodigo = maxCodigo;
             let proximaAcao = '';
 
-            // Mapeia o código de volta para o texto da ação
             if (proximoCodigo >= 9) proximaAcao = 'JUSTA CAUSA';
             else if (proximoCodigo === 8) proximaAcao = 'SUSPENSÃO 1 DIA';
             else if (proximoCodigo === 7) proximaAcao = '3ª ADVERTÊNCIA';
@@ -753,7 +764,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             const inputCodigo = document.getElementById('codigo_progressao');
             if (inputCodigo) inputCodigo.value = proximoCodigo;
 
-            // Ajusta o campo de suspensão caso o código anterior tenha sido 8
             const divSuspensao = document.getElementById('div-data-suspensao');
             const inputSuspensaoAtiva = document.getElementById('data_suspensao');
             if (proximoCodigo === 8) {
@@ -767,7 +777,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             alert(`⚠️ Quebra de fluxo ativada!\nO sistema regrediu a punição e repetirá a medida: ${proximaAcao}`);
 
-            // Refaz a caixa de texto oficial atualizando os parágrafos para refletir a nova medida "quebrada"
+            registrarLogAuditoria('QUEBRA_FLUXO', `Acionou quebra de fluxo para a matrícula ${document.getElementById('matricula').value}`);
+
             const dataAto = document.getElementById('data_ato_manual').value;
             const dataSuspensaoVal = inputSuspensaoAtiva.value;
             let dataFormatada = formatarMultiplasDatas(dataAto);
@@ -808,8 +819,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         const form = e.target;
-
-        // Pega de forma inteligente o verdadeiro botão que originou o Submit (geralmente "Salvar")
         const btnSalvar = e.submitter || form.querySelector('button[type="submit"]');
         const textoOriginalBotao = btnSalvar ? btnSalvar.textContent : 'A guardar...';
 
@@ -840,6 +849,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 msgRetorno.textContent = "✅ Medida disciplinar registrada com sucesso!";
 
                 const matriculaSalva = document.getElementById('matricula').value;
+                registrarLogAuditoria('MEDIDA_SALVA', `Salvou medida no banco para a matrícula ${matriculaSalva}`);
+
                 form.reset();
                 atualizarAtos();
                 carregarHistoricoMedidas(matriculaSalva);
@@ -858,3 +869,61 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     });
 });
+
+// ============================================================================
+// 8. FUNÇÕES DE GOVERNANÇA E AUDITORIA (NOVA ROTA GESTAO-LOG)
+// ============================================================================
+async function registrarLogAuditoria(acao, detalhe) {
+    try {
+        await fetch('/api/gestao-log/registrar-log', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tipo_acao: acao, detalhes: detalhe })
+        });
+    } catch (e) {
+        console.error("Erro ao registrar log de auditoria", e);
+    }
+}
+
+function iniciarMonitoramentoAFK() {
+    let afkTimer;
+    const TEMPO_LIMITE_AFK = 10 * 60 * 1000; // 10 minutos em milissegundos
+
+    function resetarTimerAFK() {
+        clearTimeout(afkTimer);
+        afkTimer = setTimeout(async () => {
+            try {
+                await fetch('/api/gestao-log/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ motivo: 'AFK' })
+                });
+                alert("Sua sessão foi encerrada por inatividade (Segurança da Informação).");
+                window.location.href = "/index.html";
+            } catch (err) {
+                window.location.href = "/index.html";
+            }
+        }, TEMPO_LIMITE_AFK);
+    }
+
+    // Inicia o relógio e escuta os movimentos da máquina
+    resetarTimerAFK();
+    window.addEventListener('mousemove', resetarTimerAFK);
+    window.addEventListener('keydown', resetarTimerAFK);
+    window.addEventListener('click', resetarTimerAFK);
+    window.addEventListener('scroll', resetarTimerAFK);
+}
+
+async function encerrarSessaoManual() {
+    try {
+        await fetch('/api/gestao-log/logout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ motivo: 'MANUAL' })
+        });
+        window.location.href = "/index.html";
+    } catch (erro) {
+        console.error("Erro ao deslogar", erro);
+        window.location.href = "/index.html";
+    }
+}

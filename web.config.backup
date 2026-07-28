@@ -1,0 +1,21 @@
+<configuration>
+  <system.webServer>
+    
+    <handlers>
+      <add name="iisnode" path="server/iis_start.cjs" verb="*" modules="iisnode" />
+    </handlers>
+
+    <rewrite>
+      <rules>
+        <rule name="NodeAPI" stopProcessing="true">
+          <match url=".*api/.*" />
+          <action type="Rewrite" url="server/iis_start.cjs" />
+        </rule>
+      </rules>
+    </rewrite>
+
+    <httpErrors existingResponse="PassThrough" />
+    <iisnode nodeProcessCommandLine="node.exe" devErrorsEnabled="true" debuggingEnabled="true" loggingEnabled="true" />
+    
+  </system.webServer>
+</configuration>

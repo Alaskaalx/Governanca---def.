@@ -30,36 +30,38 @@
         </header>
 
         <div id="main">
-
             <article id="login-form">
-                <h2 class="major" id="titulo-login">Login Auditoria de Processos</h2>
 
-                <form id="form-auth" method="post" action="#">
-                    <div class="fields">
-                        <div class="field">
-                            <label for="username">Usuário:</label>
-                            <input type="text" id="username" name="username" required />
+                <div id="area-login">
+                    <h2 class="major" id="titulo-login">Login Corporativo</h2>
+                    <p style="text-align: center; font-size: 0.9em; margin-top: -15px;">
+                        Utilize seu usuário e senha da rede.
+                    </p>
+                    <form id="form-auth">
+                        <div class="fields">
+                            <div class="field">
+                                <label for="username">Usuário (Rede):</label>
+                                <input type="text" id="username" name="username" placeholder="Ecadop" required />
+                            </div>
+                            <div class="field">
+                                <label for="password">Senha:</label>
+                                <input type="password" id="password" name="password" required />
+                            </div>
                         </div>
-                        <div class="field">
-                            <label for="password">Senha:</label>
-                            <input type="password" id="password" name="password" required />
-                        </div>
-                    </div>
-                    
-                    <ul class="actions">
-                        <li><button type="submit" id="btn-login" class="primary">Entrar</button></li>
-                        <li><a href="../index.html#navegar" class="button">Voltar</a></li>
-                    </ul>
-                </form>
+                        <ul class="actions">
+                            <li><button type="submit" id="btn-login" class="primary">Entrar</button></li>
+                            <li><a href="/index.html#navegar" class="button">Voltar</a></li>
+                        </ul>
+                    </form>
+                </div>
 
             </article>
 
         </div>
 
         <footer id="footer">
-            <p class="copyright">&copy; Seu Sistema. Design base: <a href="https://html5up.net">HTML5 UP</a>.</p>
+            <p class="copyright">&copy; Sistema de governança</p>
         </footer>
-
     </div>
 
     <div id="bg"></div>
@@ -71,29 +73,62 @@
     <script src="../assets/js/main.js"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const formAuth = document.getElementById('form-auth');
-            const btnLogin = document.getElementById('btn-login');
+    document.addEventListener('DOMContentLoaded', function() { 
 
-            if(formAuth) {
-                formAuth.addEventListener('submit', function(event) {
-                    // Impede o formulário de recarregar a página (comportamento padrão)
-                    event.preventDefault();
+        const divClose = document.querySelector('.close');
+        if (divClose) {
+            divClose.addEventListener('click', function() {
+                // Redireciona para a página inicial do site
+                window.location.href = '/index.html#navegar';
+            });
+        }
 
-                    // Muda o texto do botão para dar um feedback visual de carregamento
-                    btnLogin.innerText = "Entrando...";
-                    btnLogin.style.opacity = "0.7";
+        const formAuth = document.getElementById('form-auth');
+        const btnLogin = document.getElementById('btn-login');
 
-                    // Aqui você colocaria a lógica real (API, banco de dados, etc)
-                    // Vamos simular um tempinho de carregamento (1 segundo) e redirecionar
-                    setTimeout(function() {
-                        // MUDE AQUI PARA O NOME DA SUA PÁGINA PÓS-LOGIN CORRESPONDENTE
-                        window.location.href = "auditoria_processos.html"; 
-                    }, 1000);
-                });
-            }
-        });
-    </script>
+        if(formAuth) {
+            formAuth.addEventListener('submit', async function(event) {
+                event.preventDefault(); // Evita o envio padrão do formulário
+
+                btnLogin.innerText = "Autenticando na Rede...";
+                btnLogin.disabled = true;
+
+                const usernameVal = document.getElementById('username').value.trim();
+                const passwordVal = document.getElementById('password').value;
+
+                try {
+                    // Correção: Barra inicial na URL para garantir o caminho absoluto
+                    const response = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            username: usernameVal,   // Correção: Agora as variáveis coincidem
+                            password: passwordVal,   // Correção: Agora as variáveis coincidem
+                            modulo_id: 4             
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.sucesso) {
+                        btnLogin.innerText = "Acesso Permitido!";
+                        // Confirme se esse caminho da pasta é exatamente este no seu servidor
+                        window.location.href = "/src/components/page_painel_auditoria_processos/html/" + result.url_destino;
+                    } else {
+                        alert("Acesso negado: " + (result.mensagem || "Credenciais incorretas."));
+                        btnLogin.innerText = "Entrar";
+                        btnLogin.disabled = false; 
+                    }
+                } catch (error) {
+                    console.error("Erro na autenticação:", error);
+                    alert("Ocorreu um erro durante a conexão com o servidor.");
+                    btnLogin.innerText = "Entrar";
+                    btnLogin.disabled = false; 
+                }
+            });
+        }
+    });
+</script>
 
 </body>
 </html>

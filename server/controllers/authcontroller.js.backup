@@ -1,53 +1,13 @@
-import db from '../config/db.js';
-import ActiveDirectory from 'activedirectory2';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const baseLogsPath = path.join(__dirname, '../../logs_auditoria/logs_governanca');
-
 // ============================================================================
-// CONFIGURAÇÃO DO ACTIVE DIRECTORY
-// ============================================================================
-const configAD = {
-    url: 'ldap://intracorp.local',           
-    baseDN: 'dc=intracorp,dc=local',      
-    domain: '@intracorp.local'                 
-};
-
-// ============================================================================
-// FUNÇÃO INTERNA: GERADOR DE LOGS DE ACESSO
-// ============================================================================
-async function registrarLogAcesso(username, perfil, ip, modulo, acao, detalhes) {
-    try {
-        if (!username) return;
-        const nomeModulo = modulo || 'login_geral';
-        const pastaUsuario = path.join(baseLogsPath, nomeModulo, username);
-
-        if (!fs.existsSync(pastaUsuario)) fs.mkdirSync(pastaUsuario, { recursive: true });
-
-        const dataAtual = new Date();
-        const dataArquivo = dataAtual.toISOString().split('T')[0];
-        const caminhoArquivo = path.join(pastaUsuario, `auditoria_${dataArquivo}.txt`);
-
-        const dataHoraLinha = dataAtual.toLocaleString('pt-BR');
-        const linhaLog = `[${dataHoraLinha}] | IP: ${ip.padEnd(15)} | PERFIL: ${perfil.toUpperCase().padEnd(10)} | AÇÃO: ${acao.padEnd(15)} | DETALHE: ${detalhes}\n`;
-
-        await fs.promises.appendFile(caminhoArquivo, linhaLog, 'utf8');
-    } catch (erro) {
-        console.error("Erro ao gravar log de login:", erro);
-    }
-}
-
-// ============================================================================
-// FUNÇÃO ÚNICA: LOGIN LDAP COM CRIAÇÃO DE PERFIL AUTOMÁTICA
+// FUNÇÃO ÚNICA: LOGIN LDAP COM CRIAÇÃO DE PERFIL AUTOMÁTICA (CRIPTOGRAFADO)
 // ============================================================================
 export const login = async (req, res) => {
     try {
         const { username, password, modulo_id } = req.body;
         const ipMaquina = req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.ip;
+        
+        // Puxa a chave de criptografia do .env
+        const chaveCrip = process.env.CHAVE_CRIPTOGRAFIA;
 
         if (!username || !password) {
             return res.status(400).json({ sucesso: false, mensagem: "Preencha usuário e senha." });
@@ -55,7 +15,7 @@ export const login = async (req, res) => {
 
         const tabelas_modulos = {
             1: { tabela: 'login_compliance', url: 'painel_governanca.html' },
-            2: { tabela: 'login_monitoramento', url: 'index.html' },
+            2: { tabela: 'login_monitoramento', url: 'painel_monitoramento.html' },
             3: { tabela: 'login_auditoria_sites', url: 'painel_auditoria_sites.html' },
             4: { tabela: 'login_auditoria_processos', url: 'painel_auditoria_processos.html' },
             5: { tabela: 'login_gestao_medidas', url: 'painel_gestao_medidas.html' }
@@ -93,12 +53,21 @@ export const login = async (req, res) => {
         }
 
         // 2. SE A SENHA É VÁLIDA NA REDE, OLHAMOS O NOSSO BANCO (MYSQL)
-        const [rows] = await db.query(`SELECT * FROM ${nome_tabela} WHERE username = ?`, [username]);
+        // Modificado: Buscamos comparando o username criptografado e descriptografamos o restante no SELECT
+        const querySelect = `
+            SELECT id, 
+                   CAST(AES_DECRYPT(username, ?) AS CHAR) AS username, 
+                   CAST(AES_DECRYPT(nome, ?) AS CHAR) AS nome, 
+                   CAST(AES_DECRYPT(email, ?) AS CHAR) AS email, 
+                   perfil, ativo 
+            FROM ${nome_tabela} 
+            WHERE username = AES_ENCRYPT(?, ?)
+        `;
+        const [rows] = await db.query(querySelect, [chaveCrip, chaveCrip, chaveCrip, username, chaveCrip]);
         let usuario = rows[0];
 
         if (usuario) {
             if (usuario.ativo === 0 || usuario.ativo === false) {
-                // REGISTRA BLOQUEIO
                 await registrarLogAcesso(username, usuario.perfil, ipMaquina, nome_tabela, 'LOGIN_FALHO', 'Acesso negado: Usuário desativado no sistema local.');
                 return res.status(401).json({ sucesso: false, mensagem: "Seu usuário está desativado neste módulo." });
             }
@@ -107,11 +76,22 @@ export const login = async (req, res) => {
             let emailAD = '';
             try {
                 const dadosAD = await adFindUser(userPrincipalName);
-                if (dadosAD) { nomeCompleto = dadosAD.displayName || username; emailAD = dadosAD.mail || ''; }
+                if (dadosAD) { 
+                    nomeCompleto = dadosAD.displayName || username; 
+                    emailAD = dadosAD.mail || ''; 
+                }
             } catch (e) {}
 
-            const queryInsert = `INSERT INTO ${nome_tabela} (username, nome, email, perfil, ativo) VALUES (?, ?, ?, 'usuario', 1)`;
-            const [resultInsert] = await db.query(queryInsert, [username, nomeCompleto, emailAD]);
+            // Modificado: O INSERT agora insere os dados aplicando a criptografia AES_ENCRYPT
+            const queryInsert = `
+                INSERT INTO ${nome_tabela} (username, nome, email, perfil, ativo) 
+                VALUES (AES_ENCRYPT(?, ?), AES_ENCRYPT(?, ?), AES_ENCRYPT(?, ?), 'usuario', 1)
+            `;
+            const [resultInsert] = await db.query(queryInsert, [
+                username, chaveCrip, 
+                nomeCompleto, chaveCrip, 
+                emailAD, chaveCrip
+            ]);
             
             usuario = { id: resultInsert.insertId, username: username, perfil: 'usuario' };
         }
@@ -127,6 +107,7 @@ export const login = async (req, res) => {
         return res.json({ sucesso: true, primeiro_acesso: false, url_destino: url_destino, perfil: usuario.perfil });
 
     } catch (error) {
+        console.error("Erro interno no login:", error);
         return res.status(500).json({ sucesso: false, mensagem: "Erro interno no servidor de autenticação." });
     }
 };
